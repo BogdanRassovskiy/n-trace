@@ -32,7 +32,7 @@ def record(name, kind, title, **kwargs):
 
 
 def deputy(name):
-    actor = Actor.objects.create(name=name, actor_type="politician", layer="E", party="ANO")
+    actor = Actor.objects.create(name=name, actor_type="politician", layer="P", party="ANO")
     ActorPosition.objects.create(actor=actor, kind="deputy", title="poslanec PSP",
                                  start_date=datetime.date(2025, 10, 4))  # fmt: skip
     actor.include("Poslanecký mandát", on=datetime.date(2025, 10, 4))

@@ -8,7 +8,7 @@
       "collect_interval_minutes": 360,
       "request_delay_seconds": 5,
       "stale_after_hours": 1440,
-      "notes": "RSS není. Sbírá se z výpisu aktualit (lenta typu listing). Výroční zprávy se kódují jako události ručně. Datum je jen v textu („Publikováno: 3.6.2025“) — date_regex. Výpis obsahuje i starší články, proto max_date_lag_days 730.",
+      "notes": "RSS není. Sbírá se z výpisu aktualit (lenta typu listing). Datum je jen v textu („Publikováno: 3.6.2025“) — date_regex. Výpis obsahuje i starší články, proto max_date_lag_days 730.",
       "feeds": [
         {
           "url": "https://www.bis.cz/aktuality/",
@@ -19,7 +19,7 @@
       "actor": {
         "name": "Bezpečnostní informační služba (BIS)",
         "type": "institution",
-        "criterion": "Zpravodajská služba — vrstva I (README §2.1)"
+        "criterion": "Zpravodajská služba — vrstva I (README §2)"
       },
       "collector_config": {
         "listing_link_pattern": "^/aktuality/[^/]+\\.html$",
@@ -45,7 +45,7 @@
       "actor": {
         "name": "Národní úřad pro kybernetickou a informační bezpečnost (NÚKIB)",
         "type": "institution",
-        "criterion": "Kybernetická bezpečnost — vrstva I (README §2.1)"
+        "criterion": "Ústřední správní úřad — vrstva I (README §2)"
       },
       "collector_config": {
         "max_articles": 20,
@@ -61,7 +61,7 @@
       "collect_interval_minutes": 360,
       "request_delay_seconds": 5,
       "stale_after_hours": 720,
-      "notes": "RSS není, sitemap je bez dat. Sbírá se z výpisu zpravodajství; články nemají společný prefix adresy, proto XPath na nadpisy výpisu. Ministr v resortní tiskové zprávě = instituce (README §2.1). Výpis obsahuje i starší články, proto max_date_lag_days 730.",
+      "notes": "RSS není, sitemap je bez dat. Sbírá se z výpisu zpravodajství; články nemají společný prefix adresy, proto XPath na nadpisy výpisu. Ministr v resortní tiskové zprávě = instituce (README §2). Výpis obsahuje i starší články, proto max_date_lag_days 730.",
       "feeds": [
         {
           "url": "https://mv.gov.cz/zpravodajstvi",
@@ -72,7 +72,7 @@
       "actor": {
         "name": "Ministerstvo vnitra ČR",
         "type": "institution",
-        "criterion": "Ministerstvo (resortní kanály) — vrstva I (README §2.1)"
+        "criterion": "Ministerstvo — vrstva I (README §2)"
       },
       "collector_config": {
         "listing_link_xpath": "//li//h3/a/@href",

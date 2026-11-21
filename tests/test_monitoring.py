@@ -112,7 +112,7 @@ class TestQualityScore:
             name="PSP", layer=Layer.PARLIAMENT, platform=Platform.PARLIAMENT,
             url="https://psp.example/", min_text_length=50, expected_language="cs",
         )  # fmt: skip
-        actor = Actor.objects.create(name="Poslanec", actor_type="politician", layer="E")
+        actor = Actor.objects.create(name="Poslanec", actor_type="politician", layer="P")
         _, doc = save_item(psp, actor, Item(url="https://psp.example/s#r1", text="Nesouhlasím.",
                                             published_at=NOW - datetime.timedelta(days=400),
                                             date_source="page", external_id="s#r1"))  # fmt: skip
@@ -249,18 +249,19 @@ class TestExtractionAndHttp:
         assert [s.incident_type for s in result.signals] == ["blocked"]
         assert result.signals[0].level == "critical" and len(result.signals[0].examples) == 3
 
-    def test_http_errors_and_unavailable_channel(self, source):
+    def test_http_errors(self, source):
         for _ in range(2):
             CollectionRun.objects.create(
                 source=source, status="failed", http_requests=4, finished_at=NOW,
                 details={"http": {"http_503": 4}, "timeouts": 0, "redirect_offsite": 2,
-                         "errors": ["@kanal: kanál není dostupný nebo má vypnutý náhled"]},
+                         "errors": ["https://z.example/rss: HTTP 503"]},
             )  # fmt: skip
         result = monitoring.check_http(source, NOW)
         types = {s.incident_type: s for s in result.signals}
-        assert set(types) == {"http_errors", "channel_unavailable"}
+        assert set(types) == {"http_errors"}
         assert types["http_errors"].level == "critical"
         assert "chyb HTTP 100%" in types["http_errors"].description
+        assert types["http_errors"].examples == ["https://z.example/rss: HTTP 503"] * 2
 
     def test_monitor_task_skips_sources_without_runs(self, source):
         from apps.ingestion.tasks import monitor_sources

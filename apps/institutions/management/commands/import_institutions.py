@@ -1,15 +1,16 @@
-"""Справочник органов слоя I и их людей (README §2.1), идемпотентно.
+"""Справочник státních institucí слоя I и их людей (README §2), идемпотентно.
 
-    python manage.py import_sources apps/ingestion/sources/security.json
+    python manage.py import_sources apps/ingestion/sources/institutions.json
     python manage.py import_institutions
 
 - Источники (ленты сайтов органов) подключаются import_sources; здесь орган связывается
   с ними по адресу, а его актором становится актор этих источников. У органа без ленты
-  создаётся собственный актор слоя I — события и документы есть к кому отнести.
-- Профессиональные руководители — акторы слоя I (тип official) в любом канале.
-- Министры силовых и внешнеполитических ведомств остаются политиками в своём слое:
-  существующему актору (депутату PSP) ставится security_portfolio, новый создаётся без
-  слоя; функцию «член правительства» ведёт sync_politicians.
+  создаётся собственный актор слоя I — документы будет к кому отнести, как только
+  подключится лента.
+- Vedoucí představitelé (ředitelé, předsedové úřadů) — акторы слоя I (тип official).
+- Ministři zůstávají politiky ve své vrstvě: найденный актор (poslanec PSP) только
+  связывается с ministerstvem, новый создаётся без слоя; funkci «člen vlády» ведёт
+  sync_politicians.
 """
 
 import datetime
@@ -38,7 +39,7 @@ def create_actor(**fields) -> Actor:
 
 
 class Command(BaseCommand):
-    help = "Vytvoří nebo aktualizuje instituce vrstvy I, jejich vedoucí a ministry."
+    help = "Vytvoří nebo aktualizuje státní instituce vrstvy I, jejich vedoucí a ministry."
 
     def add_arguments(self, parser):
         parser.add_argument("path", type=Path, nargs="?", default=DEFAULT_PATH)
@@ -68,8 +69,9 @@ class Command(BaseCommand):
             missing = self._link_sources(institution, spec.get("sources", []))
             if institution.actor_id is None:
                 institution.actor = create_actor(
-                    name=spec["name"], actor_type=Actor.Type.INSTITUTION, layer=Layer.SECURITY,
-                    criterion="Instituce bezpečnosti — vrstva I (README §2.1)",
+                    name=spec["name"], actor_type=Actor.Type.INSTITUTION,
+                    layer=Layer.INSTITUTIONS,
+                    criterion="Státní instituce — vrstva I (README §2)",
                     inclusion_reference=spec.get("url", ""),
                 )  # fmt: skip
                 institution.save(update_fields=["actor", "updated_at"])
@@ -107,14 +109,14 @@ class Command(BaseCommand):
 
     def _official(self, person: dict) -> Actor:
         actor = Actor.objects.filter(
-            name=person["name"], layer=Layer.SECURITY, actor_type=Actor.Type.OFFICIAL
+            name=person["name"], layer=Layer.INSTITUTIONS, actor_type=Actor.Type.OFFICIAL
         ).first()
         if actor is None:
             actor = create_actor(
-                name=person["name"], actor_type=Actor.Type.OFFICIAL, layer=Layer.SECURITY,
-                role=person["role"][:100],
-                criterion=f"Profesní vedoucí ({person['role']}) — vrstva I v jakémkoli kanálu "
-                f"(README §2.1). {person.get('note', '')}".strip(),
+                name=person["name"], actor_type=Actor.Type.OFFICIAL,
+                layer=Layer.INSTITUTIONS, role=person["role"][:100],
+                criterion=f"Vedoucí představitel ({person['role']}) — vrstva I "
+                f"(README §2). {person.get('note', '')}".strip(),
                 inclusion_reference=person.get("reference", ""),
             )  # fmt: skip
         return actor
@@ -137,21 +139,16 @@ class Command(BaseCommand):
         actor.refresh_role()
 
     def _minister(self, person: dict) -> Actor:
-        """Министр — политик: существующий актор не переносится в слой I, только флаг."""
+        """Министр — политик: существующий актор не переносится в слой I."""
         actor = find_politician(person["name"])
         if actor is None:
-            # Слой не задаётся: вне Sněmovny у министра пока нет канала; функцию «člen vlády»
-            # добавит sync_politicians.
+            # Слой не задаётся: vrstvu dokumentu určuje zdroj; funkci «člen vlády»
+            # doplní sync_politicians.
             return create_actor(
                 name=person["name"], actor_type=Actor.Type.POLITICIAN,
-                role=person["role"][:100], security_portfolio=True,
+                role=person["role"][:100],
                 criterion=f"Člen vlády ({person['role']}); resortní výstupy patří instituci "
-                "(README §2.1).",
+                "(README §2).",
                 inclusion_reference=person.get("reference", ""),
             )  # fmt: skip
-        if not actor.security_portfolio:
-            before = audit.snapshot(actor)
-            actor.security_portfolio = True
-            actor.save(update_fields=["security_portfolio", "updated_at"])
-            audit.log_change(None, actor, before, note=NOTE)
         return actor

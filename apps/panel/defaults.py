@@ -18,12 +18,8 @@ DEFAULT_SETTINGS: dict[str, tuple[object, str]] = {
     ),
     "reuse-paraphrase-cosine": (
         0.85,
-        "Práh centrované kosinové podobnosti pro parafrázi (kNN). Kalibrace na médiích D: "
+        "Práh centrované kosinové podobnosti pro parafrázi (kNN). Kalibrace na médiích: "
         "stejná událost psaná nezávisle 0,75–0,85, přepis jednoho textu 0,85–0,90.",
-    ),
-    "reuse-source-layers": (
-        ["A"],
-        "Vrstvy, ze kterých se hledá převzetí do ostatních vrstev (README §4, kroky 5–6).",
     ),
     "reuse-window-days": (30, "Převzetí: maximální odstup originálu a převzetí (dní)."),
     "minhash-shingle-size": (5, "Velikost šindele ve slovech (5–7)."),
@@ -33,11 +29,6 @@ DEFAULT_SETTINGS: dict[str, tuple[object, str]] = {
         "Pravidlo přidání narativu: minimálně K nezávislých autorů.",
     ),
     "narrative-rule-window-days": (14, "Pravidlo přidání narativu: okno W (dní)."),
-    "event-window-before-days": (
-        14,
-        "Event study (vrstva I, H4): okno před událostí (dní). Fixuje se předem (README §2.1).",
-    ),
-    "event-window-after-days": (14, "Event study (vrstva I, H4): okno po události (dní)."),
     "actor-min-activity": (4, "Minimum dokumentů za období pro zařazení aktéra."),
     "chart-click-max-lines": (10, "N: do kolika čar otevře kliknutí na bod grafu příspěvky."),
     "embedding-model": ("intfloat/multilingual-e5-base", "Model embeddingů (README §4, krok 4)."),

@@ -1,8 +1,9 @@
-"""Демо-данные для разработки: акторы по слоям A–E, кодбук, документы, агрегаты, мониторинг.
+"""Демо-данные для разработки: акторы слоёв M, P, I, кодбук, документы, агрегаты, мониторинг.
 
 Всё вымышленное: имена «Demo …», адреса в зоне .example. Агрегаты синтетические, но с
-осмысленной формой: событийные нарративы появляются сначала в слое A и доходят до парламента
-с задержкой (H1), культурные ведут политики (H2). Хватает для режима сравнения на ~350 линий.
+осмысленной формой: témata, která přinášejí politici, se nejdřív objeví ve Sněmovně a média je
+převezmou se zpožděním; resortní témata startují tiskovou zprávou ministerstva; mediální
+témata se do Sněmovny dostávají později. Хватает для режима сравнения на ~350 линий.
 
     python manage.py seed_demo                 # 350 акторов, 26 недель
     python manage.py seed_demo --reset         # удалить прежние демо-данные и создать заново
@@ -36,7 +37,6 @@ from apps.ingestion.models import (
     SourceIncident,
 )
 from apps.narratives.models import (
-    Debunk,
     Label,
     Narrative,
     NarrativeCandidate,
@@ -46,64 +46,46 @@ from apps.narratives.models import (
 from apps.panel.defaults import ensure_default_settings
 from apps.panel.models import Job, Notification
 
-PARTIES = ["ANO", "ODS", "STAN", "Piráti", "SPD", "KDU-ČSL", "TOP 09", "Stačilo!", "Motoristé"]
-ANTI_SYSTEM_PARTIES = {"SPD", "Stačilo!"}
+PARTIES = ["ANO", "ODS", "STAN", "Piráti", "SPD", "KDU-ČSL", "TOP 09", "Motoristé"]
 ROLES = ["Poslanec PSP"] * 8 + ["Člen vlády", "Předseda strany", "Europoslanec"]
 
-# Доля акторов по слоям; остаток — парламент (E).
+# Доля акторов по слоям; остаток — Sněmovna (P).
 LAYER_SHARES = {
-    Layer.ATTRIBUTED: 0.012,
-    Layer.ALTERNATIVE: 0.07,
-    Layer.TELEGRAM: 0.17,
-    Layer.MAINSTREAM: 0.05,
+    Layer.MAINSTREAM: 0.04,
+    Layer.INSTITUTIONS: 0.05,
 }
 # Среднее число документов актора в неделю (знаменатель).
 WEEKLY_VOLUME = {
-    Layer.ATTRIBUTED: 90,
-    Layer.ALTERNATIVE: 25,
-    Layer.TELEGRAM: 35,
     Layer.MAINSTREAM: 70,
     Layer.PARLIAMENT: 3,
+    Layer.INSTITUTIONS: 6,
 }
-# Склонность слоя к нарративам (множитель вероятности).
+# Склонность слоя к темам кодбука (множитель вероятности).
 LAYER_AFFINITY = {
-    Layer.ATTRIBUTED: 1.6,
-    Layer.ALTERNATIVE: 1.2,
-    Layer.TELEGRAM: 1.0,
-    Layer.MAINSTREAM: 0.25,
-    Layer.PARLIAMENT: 0.5,
+    Layer.MAINSTREAM: 0.8,
+    Layer.PARLIAMENT: 1.0,
+    Layer.INSTITUTIONS: 0.6,
 }
 
 TOPICS = [
-    ("ukrajina", "Válka na Ukrajině"),
-    ("eu", "Evropská unie"),
+    ("rozpocet", "Státní rozpočet a daně"),
     ("energetika", "Energetika"),
-    ("migrace", "Migrace"),
+    ("zdravotnictvi", "Zdravotnictví"),
+    ("bydleni", "Bydlení"),
 ]
-# (код, тема, формулировка, тип: event — H1, cultural — H2, пик доли)
+# (код, тема, формулировка, kdo téma přináší: political / institutional / media, пик доли)
 NARRATIVES = [
-    ("N001", "ukrajina", "Pomoc Ukrajině ožebračuje české občany", "event", 0.22),
-    ("N002", "eu", "Brusel diktuje Česku svou vůli", "cultural", 0.12),
-    ("N003", "eu", "Euro zruinuje Čechy", "cultural", 0.08),
-    ("N004", "energetika", "Sankce proti Rusku způsobily energetickou krizi", "event", 0.18),
-    ("N005", "migrace", "Migrační pakt vnutí Česku migranty", "event", 0.15),
+    ("N001", "rozpocet", "Konsolidace rozpočtu má stát na škrtech výdajů", "political", 0.15),
+    ("N002", "rozpocet", "Konsolidace rozpočtu má stát na vyšších daních", "political", 0.10),
+    ("N003", "energetika", "Stát má regulovat ceny energií pro domácnosti", "media", 0.12),
+    ("N004", "zdravotnictvi", "Změna úhrad zdravotní péče v nemocnicích", "institutional", 0.10),
+    ("N005", "bydleni", "Nový stavební zákon urychlí výstavbu bytů", "institutional", 0.12),
 ]
-# Задержка появления по слоям в неделях от старта нарратива.
+# Задержка появления по слоям в неделях от старта темы.
 ONSET_LAG = {
-    "event": {
-        Layer.ATTRIBUTED: 0,
-        Layer.TELEGRAM: 1,
-        Layer.ALTERNATIVE: 2,
-        Layer.PARLIAMENT: 4,
-        Layer.MAINSTREAM: 5,
-    },
-    "cultural": {
-        Layer.PARLIAMENT: 0,
-        Layer.ALTERNATIVE: 1,
-        Layer.TELEGRAM: 1,
-        Layer.ATTRIBUTED: 2,
-        Layer.MAINSTREAM: 3,
-    },
+    "political": {Layer.PARLIAMENT: 0, Layer.MAINSTREAM: 1, Layer.INSTITUTIONS: 2},
+    "institutional": {Layer.INSTITUTIONS: 0, Layer.MAINSTREAM: 1, Layer.PARLIAMENT: 2},
+    "media": {Layer.MAINSTREAM: 0, Layer.PARLIAMENT: 2, Layer.INSTITUTIONS: 3},
 }
 QUALITY_RULES_VERSION = "demo-1"
 DEMO_HOST = "demo.example"
@@ -195,37 +177,22 @@ class Command(BaseCommand):
 
     def _create_sources(self, total_actors: int) -> dict:
         counts = self._layer_counts(total_actors)
-        sources = {"telegram": None, "psp": None, "sites": defaultdict(list)}
+        sources = {"psp": None, "sites": defaultdict(list)}
         sites = [
-            (Layer.ATTRIBUTED, "Demo Pravda CZ", "pravda"),
-            (Layer.ALTERNATIVE, "Demo Alternativa", "alt"),
-            (Layer.MAINSTREAM, "Demo Zprávy", "zpravy"),
+            (Layer.MAINSTREAM, "Demo Zprávy", "zpravy", 48),
+            (Layer.INSTITUTIONS, "Demo ministerstvo", "ministerstvo", 24 * 14),
         ]
-        for layer, title, slug in sites:
+        for layer, title, slug, stale_after in sites:
             for i in range(1, counts[layer] + 1):
-                source = Source(
+                source = Source.objects.create(
                     name=f"{title} {i}",
                     layer=layer,
                     platform=Platform.WEB,
                     url=f"https://{slug}-{i}.demo.example/",
+                    stale_after_hours=stale_after,
                 )
-                if layer == Layer.ATTRIBUTED:
-                    source.attribution_by = "Demo: externí atribuce"
-                    source.attribution_url = "https://attribution.demo.example/report"
-                if layer == Layer.ALTERNATIVE:
-                    source.external_rating = "demo-rating"
-                    source.external_rating_source = "Demo: externí hodnocení"
-                source.save()
                 SourceFeed.objects.create(source=source, url=f"{source.url}rss")
                 sources["sites"][layer].append(source)
-        sources["telegram"] = Source.objects.create(
-            name="Telegram (veřejné kanály)",
-            layer=Layer.TELEGRAM,
-            platform=Platform.TELEGRAM,
-            url="https://telegram.demo.example/",
-            stale_after_hours=24 * 7,
-            min_text_length=80,
-        )
         sources["psp"] = Source.objects.create(
             name="Stenoprotokoly Poslanecké sněmovny (demo)",
             layer=Layer.PARLIAMENT,
@@ -248,43 +215,24 @@ class Command(BaseCommand):
             return actor
 
         for layer, actor_type in [
-            (Layer.ATTRIBUTED, Actor.Type.ATTRIBUTED_NETWORK),
-            (Layer.ALTERNATIVE, Actor.Type.MEDIA),
             (Layer.MAINSTREAM, Actor.Type.MEDIA),
+            (Layer.INSTITUTIONS, Actor.Type.INSTITUTION),
         ]:
             for source in sources["sites"][layer]:
                 add(Actor(name=source.name, actor_type=actor_type, layer=layer), source, "")
 
-        for i in range(1, counts[Layer.TELEGRAM] + 1):
-            handle = f"demo_kanal_{i:03d}"
-            add(
-                Actor(
-                    name=f"Demo kanál {i:03d}", actor_type=Actor.Type.CHANNEL, layer=Layer.TELEGRAM
-                ),
-                sources["telegram"],
-                handle,
-                f"https://telegram.demo.example/{handle}",
-            )
-
         for i in range(1, counts[Layer.PARLIAMENT] + 1):
-            party = rng.choice(PARTIES)
-            hybrid = party in ANTI_SYSTEM_PARTIES and rng.random() < 0.25
-            actor = add(
+            add(
                 Actor(
                     name=f"Demo poslanec {i:03d}",
                     actor_type=Actor.Type.POLITICIAN,
                     layer=Layer.PARLIAMENT,
-                    party=party,
+                    party=rng.choice(PARTIES),
                     role=rng.choice(ROLES),
-                    is_hybrid=hybrid,
                 ),
                 sources["psp"],
                 f"poslanec-{i:03d}",
             )
-            if hybrid:  # гибридные политики ведут и Telegram-канал
-                ActorAccount.objects.create(
-                    actor=actor, source=sources["telegram"], account_id=f"demo_poslanec_{i:03d}"
-                )
 
         # Периоды включения: все с первой недели; часть исключена по ходу, часть возвращена.
         start = self.weeks[0]
@@ -318,15 +266,8 @@ class Command(BaseCommand):
 
         # Пример правки кодбука: у N003 будет две версии.
         n003 = narratives[2]["obj"]
-        n003.definition += " Upřesněno: včetně odchodu z eurozóny jako alternativy."
+        n003.definition += " Upřesněno: včetně zastropování cen a cílených příspěvků."
         n003.save(change_note="Demo: upřesnění definice")
-
-        Debunk.objects.create(
-            narrative=narratives[0]["obj"],
-            organization=Debunk.Organization.OTHER,
-            url="https://factcheck.demo.example/n001",
-            title="Demo odkaz na externí vyvrácení",
-        )
         return narratives
 
     # --- Агрегаты ------------------------------------------------------------------------
@@ -335,7 +276,7 @@ class Command(BaseCommand):
         """Ожидаемая доля документов о нарративе в слое на неделе."""
         lag = ONSET_LAG[narrative["kind"]][layer]
         dt = week_index - narrative["onset"] - lag
-        if narrative["kind"] == "event":
+        if narrative["kind"] != "political":  # událostní průběh: nástup, vrchol, útlum
             if dt < 0:
                 return 0.002
             return narrative["peak"] * (dt / 2) * math.exp(1 - dt / 2) + 0.01  # пик через 2 недели
@@ -376,8 +317,6 @@ class Command(BaseCommand):
         for actor in actors:
             activity = rng.lognormvariate(0, 0.6)
             affinity = LAYER_AFFINITY[actor.layer] * rng.lognormvariate(0, 0.5)
-            if actor.party in ANTI_SYSTEM_PARTIES or actor.is_hybrid:
-                affinity *= 2.5
             for wi, week in enumerate(self.weeks):
                 if not included(actor, week):
                     continue
@@ -482,10 +421,7 @@ class Command(BaseCommand):
                     tzinfo=tz,
                 )
                 n = len(documents) + 1
-                if account.source.platform == Platform.TELEGRAM:
-                    url = f"{account.source.url}{account.account_id}/{n}"
-                else:
-                    url = f"{account.source.url}clanek/{n}?utm_source=rss"
+                url = f"{account.source.url}clanek/{n}?utm_source=rss"
                 text = f"[DEMO] {narrative.name}. Ukázkový text dokumentu pro vývoj. " * 8
                 documents.append(
                     Document(
@@ -533,7 +469,7 @@ class Command(BaseCommand):
                     document=doc,
                     narrative=narrative,
                     narrative_version_id=current_version[narrative.pk],
-                    stance=rng.choice([Stance.PRO, Stance.PRO, Stance.CONTRA, Stance.NEUTRAL]),
+                    stance=rng.choice([Stance.PRO, Stance.CONTRA, Stance.NEUTRAL, Stance.NEUTRAL]),
                     origin=Label.Origin.MODEL,
                     confidence=round(rng.uniform(0.55, 0.99), 3),
                     model_name="demo-classifier",
@@ -581,16 +517,20 @@ class Command(BaseCommand):
         )
 
     def _create_reuse_links(self, documents, picks):
-        """Слой A → более поздние документы других слоёв по тому же нарративу."""
-        originals = defaultdict(list)
+        """Převzetí: dřívější dokument jiného aktéra k témuž narativu → pozdější (přetisk ČTK,
+        tiskové zprávy, citace projevu)."""
+        by_narrative = defaultdict(list)
         for doc, narrative in zip(documents, picks, strict=True):
-            if doc.source.layer == Layer.ATTRIBUTED:
-                originals[narrative.pk].append(doc)
+            by_narrative[narrative.pk].append(doc)
         links = []
         for doc, narrative in zip(documents, picks, strict=True):
-            if doc.source.layer == Layer.ATTRIBUTED or self.rng.random() > 0.3:
+            if doc.source.layer != Layer.MAINSTREAM or self.rng.random() > 0.3:
                 continue
-            earlier = [o for o in originals[narrative.pk] if o.published_at < doc.published_at]
+            earlier = [
+                o
+                for o in by_narrative[narrative.pk]
+                if o.published_at < doc.published_at and o.actor_id != doc.actor_id
+            ]
             if not earlier:
                 continue
             verbatim = self.rng.random() < 0.4
@@ -625,13 +565,13 @@ class Command(BaseCommand):
         ]
         SourceHealthCheck.objects.bulk_create(checks)
 
-        broken = sources["sites"][Layer.ALTERNATIVE][0]
+        broken = sources["sites"][Layer.INSTITUTIONS][0]
         SourceIncident.objects.create(
             source=broken,
             incident_type=SourceIncident.Type.STALE_FEED,
             level=Level.WARNING,
             started_at=timezone.now() - datetime.timedelta(days=2),
-            description="Demo: RSS se 48 hodin neaktualizovalo.",
+            description="Demo: výpis tiskových zpráv se 14 dní neaktualizoval.",
         )
         recovered = sources["sites"][Layer.MAINSTREAM][0]
         SourceIncident.objects.create(
@@ -672,13 +612,13 @@ class Command(BaseCommand):
         )
         window_end = self.weeks[-1]
         candidate = NarrativeCandidate.objects.create(
-            description="Demo shluk: „Česko přijde o suverenitu kvůli společnému dluhu EU“",
-            keywords=["dluh", "EU", "suverenita"],
+            description="Demo shluk: „Zkrácení pracovního týdne na čtyři dny“",
+            keywords=["pracovní týden", "čtyřdenní", "zaměstnavatelé"],
             n_documents=27,
             n_authors=9,
             window_start=window_end - datetime.timedelta(days=13),
             window_end=window_end,
-            layers=[Layer.TELEGRAM, Layer.ALTERNATIVE],
+            layers=[Layer.MAINSTREAM, Layer.PARLIAMENT],
         )
         candidate.example_documents.set(documents[:3])
         candidate.nearest_narratives.set([narratives[1]["obj"]])

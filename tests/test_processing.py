@@ -1,4 +1,4 @@
-"""Этап 5: воронка обработки — релевантность, эмбеддинги, MinHash/LSH, kNN-заимствования."""
+"""Этап 5: воронка обработки — релевантность, эмбеддинги, MinHash/LSH, kNN-převzetí a přetisky."""
 
 import datetime
 import random
@@ -18,16 +18,22 @@ from apps.processing.pipeline import process_pending, reset
 
 pytestmark = pytest.mark.django_db
 
-PRAVDA = (
-    "Evropská unie chystá další balík sankcí, který podle bruselských úředníků zasáhne "
-    "hlavně obyčejné občany členských států. Ceny energií porostou a domácnosti zaplatí "
-    "za rozhodnutí, o kterých nikdo nehlasoval. Kritici upozorňují, že vláda v Praze jen "
-    "poslušně plní pokyny z Bruselu a na zájmy vlastních lidí zapomíná. "
+CTK = (
+    "Ministři členských států Evropské unie se v Bruselu dohodli na dalším balíku sankcí. "
+    "Opatření se týkají dovozu vybraných surovin a vstoupí v platnost příští měsíc. "
+    "Česká vláda podle mluvčího s dohodou souhlasí a dopady na domácnosti bude sledovat. "
+    "O podrobnostech budou ministři jednat znovu na zasedání v prosinci. "
 )
 OTHER = (
     "Fotbalisté Slavie v neděli porazili Plzeň dvěma góly a vedou tabulku. Trenér po "
     "zápase ocenil výkon obrany i brankáře, který chytil penaltu ve druhém poločase. "
     "Příští týden čeká tým pohárový zápas v Ostravě, kam pojede i řada fanoušků. "
+)
+
+OTHER_SPEECH = (
+    "Pane předsedající, dovolte mi krátce se vyjádřit k návrhu zákona o odpadech. "
+    "Obce potřebují jasná pravidla pro třídění a dostatek času na přípravu svozu. "
+    "Navrhuji proto odložit účinnost o jeden rok a zapojit do přípravy svaz měst. "
 )
 
 
@@ -82,14 +88,14 @@ def refreshed(document):
 
 def test_cheap_filters_mark_irrelevant_without_embedding(topic):
     empty = make_doc(Layer.MAINSTREAM, "Prazdny", "")
-    blocked = make_doc(Layer.MAINSTREAM, "Blok", PRAVDA)
+    blocked = make_doc(Layer.MAINSTREAM, "Blok", CTK)
     DocumentQuality.objects.create(
         document=blocked, score=1, quality_rules_version="q1", has_title=True,
         has_published_at=True, date_plausible=True, text_ok=False, text_short=False,
         text_empty=False, lang_ok=True, boilerplate_dup=False, blocked_page=True,
         extraction_ratio_ok=True,
     )  # fmt: skip
-    sport = make_doc(Layer.MAINSTREAM, "Sport", PRAVDA, rubric="Sport / Fotbal", in_scope=False)
+    sport = make_doc(Layer.MAINSTREAM, "Sport", CTK, rubric="Sport / Fotbal", in_scope=False)
 
     stats = run()
 
@@ -101,7 +107,7 @@ def test_cheap_filters_mark_irrelevant_without_embedding(topic):
 
 
 def test_keywords_make_document_relevant(topic):
-    doc = make_doc(Layer.MAINSTREAM, "Zpravy", PRAVDA)
+    doc = make_doc(Layer.MAINSTREAM, "Zpravy", CTK)
     run()
     doc = refreshed(doc)
     assert doc.is_relevant is True
@@ -135,7 +141,7 @@ def test_semantic_similarity_without_keywords():
 
 
 def test_without_codebook_relevance_stays_unknown():
-    doc = make_doc(Layer.MAINSTREAM, "Zpravy", PRAVDA)
+    doc = make_doc(Layer.MAINSTREAM, "Zpravy", CTK)
     run()
     doc = refreshed(doc)
     assert doc.is_relevant is None and doc.processed_at is not None
@@ -161,14 +167,14 @@ def test_exact_word_keyword_does_not_match_inside_other_words():
 
 
 def test_embedding_is_computed_once_and_again_after_new_version(topic):
-    doc = make_doc(Layer.MAINSTREAM, "Zpravy", PRAVDA)
-    doc.record_version(text=PRAVDA)
+    doc = make_doc(Layer.MAINSTREAM, "Zpravy", CTK)
+    doc.record_version(text=CTK)
     assert run().embedded == 1
     reset()
     assert run().embedded == 0  # тот же текст и модель — эмбеддинг не пересчитывается
 
     doc = refreshed(doc)
-    doc.record_version(text=PRAVDA + " Doplněno: vláda reagovala.")
+    doc.record_version(text=CTK + " Doplněno: vláda reagovala.")
     assert refreshed(doc).processed_at is None
     stats = run()
     assert stats.processed == 1 and stats.embedded == 1
@@ -182,7 +188,7 @@ def test_center_is_recomputed_while_corpus_grows():
     first = EmbeddingCenter.objects.get()
     assert first.n_documents == embeddings.MIN_CENTER_DOCS
     for i in range(embeddings.MIN_CENTER_DOCS):
-        make_doc(Layer.MAINSTREAM, f"Y{i}", f"{PRAVDA} {i}")
+        make_doc(Layer.MAINSTREAM, f"Y{i}", f"{CTK} {i}")
     run()
     assert EmbeddingCenter.objects.get().n_documents == 2 * embeddings.MIN_CENTER_DOCS
 
@@ -190,44 +196,59 @@ def test_center_is_recomputed_while_corpus_grows():
 # --- Дословные заимствования (MinHash / LSH) ------------------------------------------
 
 
-def test_verbatim_reuse_from_layer_a_in_both_arrival_orders():
-    original = make_doc(Layer.ATTRIBUTED, "Pravda", PRAVDA, days=0)
-    copy = make_doc(Layer.TELEGRAM, "Kanal", "Přeposíláme: " + PRAVDA, days=1)
+def test_verbatim_reprint_of_ctk_in_both_arrival_orders():
+    original = make_doc(Layer.MAINSTREAM, "CTK", CTK, days=0)
+    copy = make_doc(Layer.MAINSTREAM, "Zpravy", "Informovala ČTK: " + CTK, days=1)
     run()
     link = ReuseLink.objects.get()
     assert (link.source_document, link.target_document) == (original, copy)
     assert (link.link_type, link.method) == ("verbatim", "minhash") and link.similarity >= 0.9
 
-    # Обратный порядок: копия уже обработана, оригинал Pravda приходит позже.
+    # Обратный порядок: копия уже обработана, originál ČTK приходит позже.
     ReuseLink.objects.all().delete()
     Document.objects.filter(pk=original.pk).update(processed_at=None)
     run()
     assert ReuseLink.objects.filter(source_document=original, target_document=copy).exists()
 
 
-def test_short_post_quoting_a_paragraph_counts_by_containment():
-    paragraph = PRAVDA
-    original = make_doc(Layer.ATTRIBUTED, "Pravda", paragraph + OTHER * 2, days=0)
-    post = make_doc(Layer.TELEGRAM, "Kanal", paragraph, days=1)
+def test_short_article_quoting_a_press_release_counts_by_containment():
+    paragraph = CTK
+    original = make_doc(Layer.INSTITUTIONS, "Ministerstvo", paragraph + OTHER * 2, days=0)
+    article = make_doc(Layer.MAINSTREAM, "Zpravy", paragraph, days=1)
     run()
     link = ReuseLink.objects.get(link_type="verbatim")
-    assert (link.source_document, link.target_document) == (original, post)
-    assert link.similarity >= 0.9  # почти весь пост взят из статьи, хотя Jaccard ≈ 0,4
+    assert (link.source_document, link.target_document) == (original, article)
+    assert link.similarity >= 0.9  # почти весь текст взят z tiskové zprávy, хотя Jaccard ≈ 0,4
 
 
-def test_no_link_outside_window_between_other_layers_or_backwards_in_time():
-    make_doc(Layer.ATTRIBUTED, "Pravda", PRAVDA, days=0)
-    make_doc(Layer.TELEGRAM, "Pozde", PRAVDA, days=45)  # вне окна 30 дней
-    make_doc(Layer.TELEGRAM, "Driv", PRAVDA, days=-1)  # раньше оригинала
-    make_doc(Layer.ALTERNATIVE, "Web", OTHER, days=2)
-    make_doc(Layer.MAINSTREAM, "Media", OTHER, days=3)  # D ← B: не слой-источник
+def test_no_link_outside_window_or_between_unrelated_texts():
+    make_doc(Layer.MAINSTREAM, "CTK", CTK, days=0)
+    make_doc(Layer.MAINSTREAM, "Pozde", CTK, days=45)  # вне окна 30 дней
+    make_doc(Layer.MAINSTREAM, "Web", OTHER, days=2)
+    make_doc(Layer.PARLIAMENT, "Snemovna", OTHER_SPEECH, days=3)
     run()
     assert not ReuseLink.objects.exists()
 
 
-def test_layer_i_does_not_take_part_in_reuse():
-    make_doc(Layer.ATTRIBUTED, "Pravda", PRAVDA, days=0)
-    make_doc(Layer.SECURITY, "BIS", "BIS varuje: " + PRAVDA, days=1)  # cituje narativ
+def test_earlier_document_of_any_layer_is_the_original():
+    """Originál není dán vrstvou: dřívější projev ve Sněmovně → pozdější tisková zpráva."""
+    speech = make_doc(Layer.PARLIAMENT, "Snemovna", CTK, days=0)
+    release = make_doc(Layer.INSTITUTIONS, "Ministerstvo", "Tisková zpráva: " + CTK, days=1)
+    article = make_doc(Layer.MAINSTREAM, "Zpravy", CTK, days=2)
+    run()
+    pairs = set(ReuseLink.objects.values_list("source_document", "target_document"))
+    assert (speech.pk, release.pk) in pairs and (speech.pk, article.pk) in pairs
+    assert all(source != article.pk for source, _ in pairs)  # nejpozdější není originál
+
+
+def test_same_actor_is_not_linked_to_itself():
+    source, actor = make_source(Layer.MAINSTREAM, "Zpravy")
+    when = timezone.now() - datetime.timedelta(days=5)
+    for i in range(2):
+        Document.objects.create(
+            source=source, actor=actor, url=f"https://zpravy.example/a{i}", text=CTK,
+            published_at=when + datetime.timedelta(hours=i), collected_at=when,
+        )  # fmt: skip
     run()
     assert not ReuseLink.objects.exists()
 
@@ -255,9 +276,9 @@ def shuffled(text: str) -> str:
 
 
 def test_paraphrase_found_by_knn_not_minhash():
-    original = make_doc(Layer.ATTRIBUTED, "Pravda", PRAVDA, days=0)
-    rewrite = make_doc(Layer.ALTERNATIVE, "Web", shuffled(PRAVDA), days=2)
-    make_doc(Layer.ALTERNATIVE, "Sport", OTHER, days=2)
+    original = make_doc(Layer.MAINSTREAM, "CTK", CTK, days=0)
+    rewrite = make_doc(Layer.MAINSTREAM, "Web", shuffled(CTK), days=2)
+    make_doc(Layer.MAINSTREAM, "Sport", OTHER, days=2)
     run()
     link = ReuseLink.objects.get()
     assert (link.source_document, link.target_document) == (original, rewrite)
@@ -265,15 +286,15 @@ def test_paraphrase_found_by_knn_not_minhash():
 
 
 def test_verbatim_pair_is_not_duplicated_as_paraphrase():
-    make_doc(Layer.ATTRIBUTED, "Pravda", PRAVDA, days=0)
-    make_doc(Layer.TELEGRAM, "Kanal", PRAVDA, days=1)
+    make_doc(Layer.MAINSTREAM, "CTK", CTK, days=0)
+    make_doc(Layer.MAINSTREAM, "Zpravy", CTK, days=1)
     run()
     assert list(ReuseLink.objects.values_list("link_type", flat=True)) == ["verbatim"]
 
 
 def test_reprocessing_keeps_confirmed_links_and_rebuilds_automatic():
-    original = make_doc(Layer.ATTRIBUTED, "Pravda", PRAVDA, days=0)
-    copy = make_doc(Layer.TELEGRAM, "Kanal", PRAVDA, days=1)
+    original = make_doc(Layer.MAINSTREAM, "CTK", CTK, days=0)
+    copy = make_doc(Layer.MAINSTREAM, "Zpravy", CTK, days=1)
     run()
     manual = ReuseLink.objects.create(
         source_document=original, target_document=copy, link_type="quote",
@@ -289,7 +310,7 @@ def test_reprocessing_keeps_confirmed_links_and_rebuilds_automatic():
 
 
 def test_task_processes_queue_and_respects_lock(topic):
-    make_doc(Layer.MAINSTREAM, "Zpravy", PRAVDA)
+    make_doc(Layer.MAINSTREAM, "Zpravy", CTK)
     from django.core.cache import cache
 
     cache.add(tasks.LOCK_KEY, "1", 60)
@@ -316,7 +337,7 @@ def test_import_topics_is_idempotent():
 
 
 def test_process_documents_command_reprocesses_all(topic):
-    make_doc(Layer.MAINSTREAM, "Zpravy", PRAVDA)
+    make_doc(Layer.MAINSTREAM, "Zpravy", CTK)
     call_command("process_documents", stdout=StringIO())
     out = StringIO()
     call_command("process_documents", "--all", stdout=out)

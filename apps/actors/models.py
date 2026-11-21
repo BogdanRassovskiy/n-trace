@@ -12,32 +12,21 @@ from apps.core.models import TimeStampedModel
 
 
 class Layer(models.TextChoices):
-    """Слои данных (README §2). Объёмы между слоями напрямую не сравниваются."""
+    """Слои данных (README §2): чешское публичное пространство. Объёмы между слоями
+    напрямую не сравниваются, сравниваются траектории тем."""
 
-    ATTRIBUTED = "A", "A. Atribuované sítě"
-    ALTERNATIVE = "B", "B. Alternativní média"
-    TELEGRAM = "C", "C. Telegram"
-    MAINSTREAM = "D", "D. Mainstreamová média"
-    PARLIAMENT = "E", "E. Parlament"
-    META = "F", "F. Facebook / Instagram"
-    TIKTOK = "G", "G. TikTok"
-    X = "H", "H. X"
-    SECURITY = "I", "I. Instituce bezpečnosti"
+    MAINSTREAM = "M", "M. Zpravodajská média"
+    PARLIAMENT = "P", "P. Poslanecká sněmovna"
+    INSTITUTIONS = "I", "I. Státní instituce"
 
 
-# Слой I говорит *о* нарративах (метауровень) и в общие агрегаты по умолчанию не входит
-# (README §2.1). Агрегаты, сравнения слоёв и воронки по умолчанию берут только эти слои.
-ANALYSIS_LAYERS = [layer for layer in Layer.values if layer != Layer.SECURITY]
+# Слои, которые входят в агрегаты, сравнения и поиск převzetí. Сейчас все.
+ANALYSIS_LAYERS = list(Layer.values)
 
 
 class Platform(models.TextChoices):
     WEB = "web", "Web"
-    TELEGRAM = "telegram", "Telegram"
     PARLIAMENT = "psp", "Stenoprotokoly PSP"
-    FACEBOOK = "facebook", "Facebook"
-    INSTAGRAM = "instagram", "Instagram"
-    TIKTOK = "tiktok", "TikTok"
-    X = "x", "X"
 
 
 class DateRange(Func):
@@ -48,7 +37,7 @@ class DateRange(Func):
 
 
 class Source(TimeStampedModel):
-    """Площадка: сайт, Telegram-канал, стенограммы. Атрибуция — только внешняя (README §1)."""
+    """Площадка: сайт média, web instituce, стенограммы PSP."""
 
     name = models.CharField("název", max_length=200)
     layer = models.CharField("vrstva", max_length=1, choices=Layer.choices)
@@ -65,17 +54,6 @@ class Source(TimeStampedModel):
         blank=True,
         help_text="Např.: max_articles, backfill_pages, term (PSP).",
     )
-
-    # Атрибуция и внешний рейтинг — ссылки на чужие оценки, не наш вывод.
-    attribution_by = models.CharField(
-        "atribuce: kdo",
-        max_length=200,
-        blank=True,
-        help_text="Státní orgán nebo výzkumná organizace.",
-    )
-    attribution_url = models.URLField("atribuce: odkaz na zprávu", max_length=500, blank=True)
-    external_rating = models.CharField("externí hodnocení", max_length=100, blank=True)
-    external_rating_source = models.CharField("externí hodnocení: kdo", max_length=200, blank=True)
 
     # Параметры мониторинга сбора (README §4.2), настраиваются per source.
     expected_language = models.CharField(
@@ -101,16 +79,13 @@ class Source(TimeStampedModel):
 
 
 class Actor(TimeStampedModel):
-    """Автор документов: политик, медиа, канал, атрибутированная сеть (README §2 «Акторы»)."""
+    """Автор документов: политик, медиа, státní instituce (README §2 «Акторы»)."""
 
     class Type(models.TextChoices):
         POLITICIAN = "politician", "Politik"
-        INFLUENCER = "influencer", "Politický influencer"
         MEDIA = "media", "Médium"
-        CHANNEL = "channel", "Kanál"
-        ATTRIBUTED_NETWORK = "attributed_network", "Atribuovaná síť"
-        INSTITUTION = "institution", "Instituce bezpečnosti"
-        OFFICIAL = "official", "Profesní vedoucí bezpečnostní instituce"
+        INSTITUTION = "institution", "Státní instituce"
+        OFFICIAL = "official", "Vedoucí představitel instituce"
 
     class Status(models.TextChoices):
         ACTIVE = "active", "Aktivní"
@@ -133,7 +108,7 @@ class Actor(TimeStampedModel):
         max_length=1,
         choices=Layer.choices,
         blank=True,
-        help_text="U médií, sítí a institucí vrstva, ve které působí. U politiků může zůstat "
+        help_text="U médií a institucí vrstva, ve které působí. U politiků může zůstat "
         "prázdná (europoslanci, členové vlády mimo Sněmovnu): vrstvu dokumentu určuje zdroj.",
     )
     party = models.CharField("strana", max_length=100, blank=True)
@@ -142,11 +117,6 @@ class Actor(TimeStampedModel):
         max_length=300,
         blank=True,
         help_text="Souhrn současných funkcí (ActorPosition); doplňuje se automaticky.",
-    )
-    is_hybrid = models.BooleanField(
-        "hybridní aktér",
-        default=False,
-        help_text="Formálně politik, komunikací blíže alternativní scéně.",
     )
     office_status = models.CharField(
         "současná funkce",
@@ -170,12 +140,6 @@ class Actor(TimeStampedModel):
         db_index=True,
         help_text="Starosta, zastupitel apod., jehož funkce je výslovně uvedena v textu "
         "dokumentu (viz zmínky). Neověřeno výzkumníkem: chybně rozpoznané vyřaďte.",
-    )
-    security_portfolio = models.BooleanField(
-        "bezpečnostní resort",
-        default=False,
-        help_text="Ministr vnitra, obrany nebo zahraničí: jeho politická komunikace se "
-        "porovnává s resortní (vrstva I, README §2.1).",
     )
     activity_cohort = models.CharField(
         "kohorta aktivity", max_length=10, choices=ActivityCohort.choices, blank=True
@@ -242,7 +206,7 @@ class Actor(TimeStampedModel):
         else:
             status = self.OfficeStatus.NONE
         if self.actor_type not in {self.Type.POLITICIAN, self.Type.OFFICIAL}:
-            status = ""  # média, kanály, instituce: pojem funkce se na ně nevztahuje
+            status = ""  # média a instituce: pojem funkce se na ně nevztahuje
         role = "; ".join(titles)[:300] if titles else self.role
         if (role, status) != (self.role, self.office_status):
             self.role, self.office_status = role, status
@@ -325,7 +289,7 @@ class ActorPosition(models.Model):
         PRESIDENT = "president", "Prezident republiky"
         SENATOR = "senator", "Senátor"
         REGIONAL = "regional", "Krajská nebo obecní funkce"
-        OFFICIAL = "official", "Vedoucí bezpečnostní instituce"
+        OFFICIAL = "official", "Vedoucí představitel instituce"
         PARTY_LEADER = "party_leader", "Předseda strany"
         PARTY_FUNCTION = "party_function", "Jiná stranická funkce"
         OTHER = "other", "Jiná funkce"
@@ -373,7 +337,7 @@ class ActorPosition(models.Model):
 
 
 class ActorAccount(models.Model):
-    """Привязка актора к источнику: handle Telegram, URL профиля, рубрика сайта и т. п."""
+    """Привязка актора к источнику: rubrika webu, ID poslance PSP apod."""
 
     actor = models.ForeignKey(
         Actor, verbose_name="aktér", on_delete=models.CASCADE, related_name="accounts"
@@ -385,7 +349,7 @@ class ActorAccount(models.Model):
         "identifikátor účtu",
         max_length=300,
         blank=True,
-        help_text="Handle, ID kanálu nebo cesta profilu. Prázdné — aktér je celý zdroj.",
+        help_text="ID poslance, rubrika nebo cesta na webu. Prázdné — aktér je celý zdroj.",
     )
     url = models.URLField("odkaz", max_length=500, blank=True)
     added_at = models.DateTimeField("přidán", auto_now_add=True)

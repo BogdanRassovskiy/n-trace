@@ -1,6 +1,146 @@
 {
   "institutions": [
     {
+      "name": "Úřad vlády České republiky",
+      "abbreviation": "ÚV",
+      "group": "government_office",
+      "url": "https://vlada.gov.cz/",
+      "notes": "Tiskové zprávy vlády a premiéra; zahrnuje i sekretariát Bezpečnostní rady státu. Kanál k ověření."
+    },
+    {
+      "name": "Ministerstvo dopravy",
+      "abbreviation": "MD",
+      "group": "ministry",
+      "url": "https://md.gov.cz/",
+      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+    },
+    {
+      "name": "Ministerstvo financí",
+      "abbreviation": "MF",
+      "group": "ministry",
+      "url": "https://mf.gov.cz/",
+      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+    },
+    {
+      "name": "Ministerstvo kultury",
+      "abbreviation": "MK",
+      "group": "ministry",
+      "url": "https://mk.gov.cz/",
+      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+    },
+    {
+      "name": "Ministerstvo obrany",
+      "abbreviation": "MO",
+      "group": "ministry",
+      "url": "https://mo.gov.cz/",
+      "minister": {
+        "name": "Jaromír Zůna",
+        "role": "místopředseda vlády a ministr obrany",
+        "reference": "https://vlada.gov.cz/cz/vlada/"
+      }
+    },
+    {
+      "name": "Ministerstvo pro místní rozvoj",
+      "abbreviation": "MMR",
+      "group": "ministry",
+      "url": "https://mmr.gov.cz/",
+      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+    },
+    {
+      "name": "Ministerstvo práce a sociálních věcí",
+      "abbreviation": "MPSV",
+      "group": "ministry",
+      "url": "https://mpsv.gov.cz/",
+      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+    },
+    {
+      "name": "Ministerstvo průmyslu a obchodu",
+      "abbreviation": "MPO",
+      "group": "ministry",
+      "url": "https://mpo.gov.cz/",
+      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+    },
+    {
+      "name": "Ministerstvo spravedlnosti",
+      "abbreviation": "MSp",
+      "group": "ministry",
+      "url": "https://msp.gov.cz/",
+      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+    },
+    {
+      "name": "Ministerstvo vnitra",
+      "abbreviation": "MV",
+      "group": "ministry",
+      "url": "https://mv.gov.cz/",
+      "sources": [
+        "https://mv.gov.cz/zpravodajstvi"
+      ],
+      "notes": "Včetně Centra proti hybridním hrozbám.",
+      "minister": {
+        "name": "Lubomír Metnar",
+        "role": "ministr vnitra",
+        "reference": "https://vlada.gov.cz/cz/vlada/"
+      }
+    },
+    {
+      "name": "Ministerstvo zahraničních věcí",
+      "abbreviation": "MZV",
+      "group": "ministry",
+      "url": "https://mzv.gov.cz/",
+      "notes": "Strategická komunikace.",
+      "minister": {
+        "name": "Petr Macinka",
+        "role": "místopředseda vlády a ministr zahraničních věcí",
+        "reference": "https://vlada.gov.cz/cz/vlada/"
+      }
+    },
+    {
+      "name": "Ministerstvo zdravotnictví",
+      "abbreviation": "MZ",
+      "group": "ministry",
+      "url": "https://mzd.gov.cz/",
+      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+    },
+    {
+      "name": "Ministerstvo zemědělství",
+      "abbreviation": "MZe",
+      "group": "ministry",
+      "url": "https://mze.gov.cz/",
+      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+    },
+    {
+      "name": "Ministerstvo školství, mládeže a tělovýchovy",
+      "abbreviation": "MŠMT",
+      "group": "ministry",
+      "url": "https://msmt.gov.cz/",
+      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+    },
+    {
+      "name": "Ministerstvo životního prostředí",
+      "abbreviation": "MŽP",
+      "group": "ministry",
+      "url": "https://mzp.gov.cz/",
+      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+    },
+    {
+      "name": "Národní úřad pro kybernetickou a informační bezpečnost",
+      "abbreviation": "NÚKIB",
+      "group": "central_authority",
+      "url": "https://nukib.gov.cz/",
+      "sources": [
+        "https://nukib.gov.cz/cs/infoservis/aktuality"
+      ],
+      "officials": [
+        {
+          "name": "Lukáš Kintr",
+          "role": "ředitel NÚKIB",
+          "reference": "https://nukib.gov.cz/cs/o-nukib/vedeni-uradu",
+          "note": "Ve funkci od 1. 7. 2022.",
+          "since": "2022-07-01"
+        }
+      ]
+    },
+    {
       "name": "Bezpečnostní informační služba",
       "abbreviation": "BIS",
       "group": "intelligence",
@@ -46,86 +186,9 @@
       ]
     },
     {
-      "name": "Národní úřad pro kybernetickou a informační bezpečnost",
-      "abbreviation": "NÚKIB",
-      "group": "cyber",
-      "url": "https://nukib.gov.cz/",
-      "sources": [
-        "https://nukib.gov.cz/cs/infoservis/aktuality"
-      ],
-      "officials": [
-        {
-          "name": "Lukáš Kintr",
-          "role": "ředitel NÚKIB",
-          "reference": "https://nukib.gov.cz/cs/o-nukib/vedeni-uradu",
-          "note": "Ve funkci od 1. 7. 2022.",
-          "since": "2022-07-01"
-        }
-      ]
-    },
-    {
-      "name": "Ministerstvo vnitra",
-      "abbreviation": "MV",
-      "group": "ministry",
-      "url": "https://mv.gov.cz/",
-      "sources": [
-        "https://mv.gov.cz/zpravodajstvi"
-      ],
-      "notes": "Včetně Centra proti hybridním hrozbám.",
-      "minister": {
-        "name": "Lubomír Metnar",
-        "role": "ministr vnitra",
-        "reference": "https://vlada.gov.cz/cz/vlada/"
-      }
-    },
-    {
-      "name": "Ministerstvo obrany",
-      "abbreviation": "MO",
-      "group": "ministry",
-      "url": "https://mo.gov.cz/",
-      "minister": {
-        "name": "Jaromír Zůna",
-        "role": "místopředseda vlády a ministr obrany",
-        "reference": "https://vlada.gov.cz/cz/vlada/"
-      }
-    },
-    {
-      "name": "Ministerstvo zahraničních věcí",
-      "abbreviation": "MZV",
-      "group": "ministry",
-      "url": "https://mzv.gov.cz/",
-      "notes": "Strategická komunikace.",
-      "minister": {
-        "name": "Petr Macinka",
-        "role": "místopředseda vlády a ministr zahraničních věcí",
-        "reference": "https://vlada.gov.cz/cz/vlada/"
-      }
-    },
-    {
-      "name": "Úřad vlády — sekretariát Bezpečnostní rady státu",
-      "abbreviation": "BRS",
-      "group": "coordination",
-      "url": "https://vlada.gov.cz/",
-      "notes": "Poradce pro národní bezpečnost zřízen usnesením vlády č. 1078/2022; zda je funkce v období výzkumu obsazena, není na webu Úřadu vlády uvedeno — otevřená otázka."
-    },
-    {
-      "name": "Policie České republiky",
-      "abbreviation": "PČR",
-      "group": "force",
-      "url": "https://policie.gov.cz/",
-      "notes": "Včetně NCOZ.",
-      "officials": [
-        {
-          "name": "Martin Vondrášek",
-          "role": "policejní prezident",
-          "reference": "https://policie.gov.cz/policejni-prezident"
-        }
-      ]
-    },
-    {
       "name": "Armáda České republiky / Generální štáb",
       "abbreviation": "AČR",
-      "group": "force",
+      "group": "security_force",
       "url": "https://acr.army.cz/",
       "officials": [
         {
@@ -136,8 +199,22 @@
           "since": "2026-07-01"
         }
       ]
+    },
+    {
+      "name": "Policie České republiky",
+      "abbreviation": "PČR",
+      "group": "security_force",
+      "url": "https://policie.gov.cz/",
+      "notes": "Včetně NCOZ.",
+      "officials": [
+        {
+          "name": "Martin Vondrášek",
+          "role": "policejní prezident",
+          "reference": "https://policie.gov.cz/policejni-prezident"
+        }
+      ]
     }
   ],
   "checked": "2026-11-03",
-  "_comment": "Osoby ověřeny na oficiálních webech institucí a vlády k datu checked. Při změně ve funkci: vyřadit aktéra (období zařazení) a přidat nového."
+  "_comment": "Osoby a adresy BIS, VZ, ÚZSI, NÚKIB, MV, MO, MZV, PČR, AČR ověřeny k datu checked. Úřad vlády a ostatní ministerstva přidány bez ověření kanálů (poznámka „k ověření“). Při změně ve funkci: vyřadit aktéra (období zařazení) a přidat nového."
 }

@@ -195,7 +195,7 @@ def extract_article(html: str, url: str, feed_published_at=None) -> Extracted:
         text=text,
         published_at=published_at,
         date_source=date_source,
-        # Атрибут lang бывает шаблонным (42tcen.com: «en» у чешских статей) — текст надёжнее.
+        # Атрибут lang бывает шаблонным («en» у чешских статей) — текст надёжнее.
         language=detect_language(text) or _html_lang(html),
         categories=categories,
         canonical_url=canonical,

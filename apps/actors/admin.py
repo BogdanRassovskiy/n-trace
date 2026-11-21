@@ -80,15 +80,13 @@ class ActorAccountInline(admin.TabularInline):
 @admin.register(Actor)
 class ActorAdmin(AuditedModelAdmin):
     list_display = [
-        "icon", "name", "actor_type", "layer", "party", "role", "office_status", "is_hybrid",
-        "status",
+        "icon", "name", "actor_type", "layer", "party", "role", "office_status", "status",
     ]  # fmt: skip
     list_display_links = ["icon", "name"]
     readonly_fields = ["photo_preview", "office_status"]
     list_filter = [
         "layer", "actor_type", "status", "office_status", "added_automatically", "manual_inclusion",
-        "is_hybrid",
-        "security_portfolio", "activity_cohort", "party",
+        "activity_cohort", "party",
     ]  # fmt: skip
     search_fields = ["name", "party", "role", "positions__title", "accounts__account_id"]
     inlines = [

@@ -4,17 +4,15 @@
 
 ```bash
 docker compose exec web python manage.py import_sources apps/ingestion/sources/mainstream.json
-docker compose exec web python manage.py import_sources apps/ingestion/sources/attributed.json
-docker compose exec web python manage.py import_sources apps/ingestion/sources/security.json && docker compose exec web python manage.py import_institutions
-docker compose exec web python manage.py import_psp_deputies   # слой E: депутаты + источник стенограмм
+docker compose exec web python manage.py import_sources apps/ingestion/sources/institutions.json && docker compose exec web python manage.py import_institutions
+docker compose exec web python manage.py import_psp_deputies   # слой P: депутаты + источник стенограмм
 ```
 
 | Файл | Слой | Статус |
 |---|---|---|
-| `mainstream.json` | D | ČT24, iROZHLAS, Seznam Zprávy, iDNES, Novinky, Blesk, ČTK (ленты проверены 2026-11-02, ČTK — 2026-11-03) |
-| `attributed.json` | A | Pravda Česko (VIGINUM, DFRLab), 42TCen (BIS VZ 2024) — проверено 2026-11-03 |
-| `security.json` | I | BIS (výpis aktualit), NÚKIB (RSS), MV (výpis zpravodajství) — проверено 2026-11-03; органы — `import_institutions` |
-| — | B, C | списки альтернативных сайтов и Telegram-каналов составляет исследователь |
+| `mainstream.json` | M | ČT24, iROZHLAS, Seznam Zprávy, iDNES, Novinky, Blesk, ČTK (ленты проверены 2026-11-02, ČTK — 2026-11-03) |
+| `institutions.json` | I | BIS (výpis aktualit), NÚKIB (RSS), MV (výpis zpravodajství) — проверено 2026-11-03; реестр органов — `import_institutions`; Úřad vlády и остальные министерства — к проверке |
+| — | P | источник стенограмм создаёт `import_psp_deputies` |
 
 ## Формат
 
@@ -22,36 +20,24 @@ docker compose exec web python manage.py import_psp_deputies   # слой E: д�
 {
   "sources": [
     {
-      "name": "Название сайта",
+      "name": "Название издания или органа",
       "url": "https://example.cz/",
-      "layer": "B",
+      "layer": "M",
       "platform": "web",
       "collect_interval_minutes": 60,
       "request_delay_seconds": 3,
-      "external_rating": "…", "external_rating_source": "konspiratori.sk",
       "feeds": [
         {"url": "https://example.cz/rss", "rubric": "Domácí"},
         {"url": "https://example.cz/sitemap-news.xml", "kind": "sitemap"}
       ],
-      "actor": {"name": "Название сайта", "type": "media", "criterion": "Основание включения"}
-    },
-    {
-      "name": "Telegram (публичные каналы)",
-      "url": "https://t.me/",
-      "layer": "C",
-      "platform": "telegram",
-      "collect_interval_minutes": 60,
-      "channels": [
-        {"handle": "nazev_kanalu", "actor": {"name": "Название канала", "criterion": "…"}},
-        {"handle": "kanal_politika", "actor": {"name": "Имя политика", "type": "politician", "party": "…", "is_hybrid": true}}
-      ]
+      "actor": {"name": "Название издания", "type": "media", "criterion": "Основание включения"}
     }
   ]
 }
 ```
 
-- **Слой A** (атрибутированные сети): `layer: "A"`, `"actor": {"type": "attributed_network", …}`, плюс
-  `attribution_by` и `attribution_url` — ссылка на внешний отчёт (собственной атрибуции нет, README §1).
+- **Слои:** `M` — zpravodajská média, `I` — státní instituce (`"actor": {"type": "institution", …}`);
+  слой `P` (stenoprotokoly) подключает `import_psp_deputies`.
 - Ленты (`feeds[].kind`): `rss` (по умолчанию), `sitemap` (в т. ч. индекс — читаются
   `max_child_sitemaps` свежих), `listing` — HTML-страница со списком статей для сайтов без
   пригодной ленты; ссылки отбираются по `collector_config.listing_link_pattern` (regex пути).
@@ -64,6 +50,4 @@ docker compose exec web python manage.py import_psp_deputies   # слой E: д�
   - `max_date_lag_days` — допустимое отставание даты от сбора (30; у органов 730);
   - `origin_xpath` — XPath к адресу первоисточника на странице → `meta.origin_urls`.
 - `expected_language: ""` — язык не проверяется (сайт на нескольких языках).
-- Сайты: `actor` — сайт целиком как один актор. Telegram: один источник, по актору на канал.
-- Telegram собирается из публичного веб-превью `t.me/s/<канал>`: без логина и API-ключей, только
-  открытые каналы. Канал с выключенным превью попадёт в ошибки запуска сбора.
+- `actor` — сайт целиком как один актор (издание или орган).

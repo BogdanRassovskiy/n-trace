@@ -11,9 +11,6 @@
     · interval sběru {{ source.collect_interval_minutes }} min{% if not source.is_active %} · <strong>sběr vypnut</strong>{% endif %}
     · <a href="{% url 'admin:actors_source_change' source.pk %}">upravit v administraci</a>
   </p>
-  {% if source.attribution_by %}
-    <p class="small">Atribuce: {{ source.attribution_by }}{% if source.attribution_url %} — <a href="{{ source.attribution_url }}" rel="noopener noreferrer">zpráva</a>{% endif %}</p>
-  {% endif %}
 
   <section class="card">
     <h2>Objem za den</h2>

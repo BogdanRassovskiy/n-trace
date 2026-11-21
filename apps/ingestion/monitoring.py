@@ -81,7 +81,7 @@ def check_volume(source: Source, now) -> CheckResult:
     first = docs.order_by("collected_at").values_list("collected_at", flat=True).first()
     last = docs.order_by("-collected_at").values_list("collected_at", flat=True).first()
 
-    # Лента «молчит» дольше порога источника (у редких Telegram-каналов он больше).
+    # Лента «молчит» дольше порога источника (у редко публикующих institucí он больше).
     stale_after = datetime.timedelta(hours=source.stale_after_hours)
     reference = last or (
         source.collection_runs.order_by("started_at").values_list("started_at", flat=True).first()
@@ -251,9 +251,6 @@ def check_quality(source: Source, now) -> CheckResult:
     return result
 
 
-UNAVAILABLE = re.compile(r"není dostupný|vypnutý náhled")
-
-
 def check_http(source: Source, now) -> CheckResult:
     result = CheckResult(CheckType.HTTP, set())
     runs = list(source.collection_runs.filter(started_at__gte=now - datetime.timedelta(days=1)))
@@ -261,7 +258,7 @@ def check_http(source: Source, now) -> CheckResult:
     if not finished:
         result.details = "Za den neproběhlo žádné spuštění sběru."
         return result
-    result.covers |= {Type.HTTP_ERRORS, Type.CHANNEL_UNAVAILABLE}
+    result.covers |= {Type.HTTP_ERRORS}
 
     requests = sum(r.http_requests for r in finished)
     codes: dict[str, int] = {}
@@ -284,14 +281,6 @@ def check_http(source: Source, now) -> CheckResult:
         "timeouts": timeouts, "redirect_offsite": offsite, "robots_disallowed": robots,
     }  # fmt: skip
 
-    error_samples = [e for r in finished for e in r.details.get("errors", [])]
-    unavailable = [e for e in error_samples if UNAVAILABLE.search(e)]
-    if unavailable:
-        result.signals.append(
-            Signal(Type.CHANNEL_UNAVAILABLE, Level.CRITICAL,
-                   "Kanál není dostupný, přejmenován nebo smazán.", sorted(set(unavailable))[:5])
-        )  # fmt: skip
-
     problems = []
     if requests and errors / requests >= HTTP_ERROR_SHARE:
         problems.append(f"chyb HTTP {errors / requests:.0%} požadavků")
@@ -310,7 +299,7 @@ def check_http(source: Source, now) -> CheckResult:
         )
     if problems:
         level = Level.CRITICAL if len(failed) == len(finished) else Level.WARNING
-        examples = [e for e in error_samples if e not in unavailable][:MAX_EXAMPLES]
+        examples = [e for r in finished for e in r.details.get("errors", [])][:MAX_EXAMPLES]
         result.signals.append(Signal(Type.HTTP_ERRORS, level, "; ".join(problems) + ".", examples))
     return result
 

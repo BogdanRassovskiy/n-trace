@@ -1,14 +1,12 @@
-"""Коллекторы по платформам. Слой A (Pravda) и B собираются тем же веб-коллектором, что и D."""
+"""Коллекторы по платформам: веб (média a instituce) и stenoprotokoly PSP."""
 
 from apps.actors.models import Platform, Source
 
 from .psp import PspCollector
-from .telegram import TelegramCollector
 from .web import WebCollector
 
 COLLECTORS = {
     Platform.WEB: WebCollector,
-    Platform.TELEGRAM: TelegramCollector,
     Platform.PARLIAMENT: PspCollector,
 }
 

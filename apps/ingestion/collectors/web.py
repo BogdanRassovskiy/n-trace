@@ -138,8 +138,8 @@ class WebCollector(Collector):
     listing_link_pattern — регулярное выражение пути статьи для лент типа «listing»,
     listing_link_xpath — XPath к атрибутам href ссылок на статьи (по умолчанию все ссылки),
     date_regex — шаблон даты на странице, если htmldate её не находит (см. page_date),
-    origin_xpath — XPath к адресам первоисточника на странице (у агрегаторов сети Pravda:
-    Telegram-канал, откуда взят текст); сохраняются в meta["origin_urls"]."""
+    origin_xpath — XPath к адресам первоисточника на странице (odkaz na zprávu ČTK nebo
+    tiskovou zprávu, ze které text vychází); сохраняются в meta["origin_urls"]."""
 
     def collect(self):
         account = (

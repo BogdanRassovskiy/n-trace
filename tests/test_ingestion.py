@@ -17,7 +17,6 @@ from apps.actors.models import Actor, ActorAccount, Layer, Platform, Source
 from apps.documents.models import Document
 from apps.documents.utils import normalize_url
 from apps.ingestion import psp
-from apps.ingestion.collectors.telegram import parse_channel_page, parse_count
 from apps.ingestion.collectors.web import parse_sitemap
 from apps.ingestion.deputies import ICON_SIZE, sync_deputies
 from apps.ingestion.http import PoliteClient, RobotsDisallowed
@@ -298,106 +297,6 @@ def test_parse_sitemap_index_and_news():
 # --- Telegram -----------------------------------------------------------------------------
 
 
-def tg_message(channel, msg_id, text, when, views="1.2K", forwarded=None):
-    fwd = (
-        f'<div class="tgme_widget_message_forwarded_from">Forwarded from '
-        f'<a class="tgme_widget_message_forwarded_from_name" href="https://t.me/{forwarded}">{forwarded}</a></div>'
-        if forwarded
-        else ""
-    )
-    return f"""<div class="tgme_widget_message_wrap js-widget_message_wrap">
-      <div class="tgme_widget_message js-widget_message" data-post="{channel}/{msg_id}">
-        <div class="tgme_widget_message_bubble">{fwd}
-          <div class="tgme_widget_message_text js-message_text" dir="auto">{text}</div>
-          <div class="tgme_widget_message_footer"><div class="tgme_widget_message_info">
-            <span class="tgme_widget_message_views">{views}</span>
-            <span class="tgme_widget_message_meta"><a class="tgme_widget_message_date" href="https://t.me/{channel}/{msg_id}">
-            <time datetime="{when}" class="time">10:00</time></a></span>
-          </div></div>
-        </div></div></div>"""
-
-
-def tg_page(channel, *messages):
-    history = "".join(messages)
-    return f"<html><body><section class='tgme_channel_history'>{history}</section></body></html>"
-
-
-def telegram_source(handle="kanal_cz"):
-    source = Source.objects.create(
-        name="Telegram", layer=Layer.TELEGRAM, platform=Platform.TELEGRAM, url="https://t.me/",
-        collector_config={"backfill_pages": 2},
-    )  # fmt: skip
-    actor = Actor.objects.create(name="Kanál", actor_type=Actor.Type.CHANNEL, layer=Layer.TELEGRAM)
-    ActorAccount.objects.create(actor=actor, source=source, account_id=handle)
-    return source
-
-
-class TestTelegram:
-    def test_parse_message(self):
-        page = tg_page(
-            "kanal_cz",
-            tg_message(
-                "kanal_cz",
-                7,
-                "První řádek<br/>Druhý řádek",
-                "2026-10-30T09:00:00+00:00",
-                "3.4K",
-                "zdroj",
-            ),
-        )
-        [msg] = parse_channel_page(page)
-        assert msg["id"] == 7 and msg["text"] == "První řádek\nDruhý řádek"
-        assert msg["views"] == 3400 and msg["forwarded_from"]["name"] == "zdroj"
-        assert msg["published_at"] == datetime.datetime(2026, 10, 30, 9, tzinfo=datetime.UTC)
-
-    @pytest.mark.parametrize(
-        ("raw", "value"), [("950", 950), ("1.2K", 1200), ("3M", 3_000_000), ("", None)]
-    )
-    def test_parse_count(self, raw, value):
-        assert parse_count(raw) == value
-
-    def test_backfill_then_incremental(self, web):
-        source = telegram_source()
-        t = "2026-10-30T09:00:00+00:00"
-        web.add(
-            "https://t.me/s/kanal_cz",
-            tg_page("kanal_cz", *(tg_message("kanal_cz", i, f"Zpráva {i}", t) for i in (11, 12))),
-        )
-        web.add(
-            "https://t.me/s/kanal_cz?before=11",
-            tg_page("kanal_cz", *(tg_message("kanal_cz", i, f"Zpráva {i}", t) for i in (9, 10))),
-        )
-        run = run_collector(source, web.client())
-        assert run.new == 4
-        doc = Document.objects.get(external_id="kanal_cz/12")
-        assert doc.url == "https://t.me/kanal_cz/12" and doc.engagement == {"views": 1200}
-
-        # Новый пост: читается одна страница, просмотры старых обновляются.
-        web.add(
-            "https://t.me/s/kanal_cz",
-            tg_page(
-                "kanal_cz",
-                *(tg_message("kanal_cz", i, f"Zpráva {i}", t, views="2K") for i in (12, 13)),
-            ),
-        )
-        web.requests.clear()
-        run = run_collector(source, web.client())
-        assert (run.new, run.unchanged) == (1, 1)
-        assert "https://t.me/s/kanal_cz?before=12" not in web.requests
-        assert Document.objects.get(external_id="kanal_cz/12").engagement == {"views": 2000}
-
-    def test_unavailable_channel(self, web):
-        source = telegram_source("zmizely")
-        web.add(
-            "https://t.me/s/zmizely", "", status=302, headers={"location": "https://t.me/zmizely"}
-        )
-        web.add("https://t.me/zmizely", "<html>channel</html>")
-        run = run_collector(source, web.client())
-        assert "není dostupný" in run.details["errors"][0]
-
-
-# --- PSP ----------------------------------------------------------------------------------
-
 STENO_PAGE = """<html><body><div id="main-content"><div class="document-nav">
 <p class="date"><a href="1-1.html">Pondělí&nbsp;3.&nbsp;listopadu&nbsp;2025</a></p></div>
 (14.10 hodin)<br>(pokračuje Věra Kovářová)<br><br>
@@ -432,7 +331,7 @@ def test_psp_collector(web):
         (1, "Věra Kovářová", "active"),
         (5000, "Eva Bývalá", "excluded"),
     ]:
-        actor = Actor.objects.create(name=name, actor_type="politician", layer="E", status=status)
+        actor = Actor.objects.create(name=name, actor_type="politician", layer="P", status=status)
         ActorAccount.objects.create(actor=actor, source=source, account_id=str(psp_id))
 
     base = "https://www.psp.cz/eknih/2025ps/stenprot/"
@@ -551,7 +450,7 @@ def test_sync_deputies(web):
         "poslanec PSP",
     )
     assert havlicek.positions.get(kind="deputy").start_date == datetime.date(2025, 10, 4)
-    assert havlicek.layer == "E" and havlicek.status == Actor.Status.ACTIVE
+    assert havlicek.layer == "P" and havlicek.status == Actor.Status.ACTIVE
     assert havlicek.inclusion_periods.get().start_date == datetime.date(2025, 10, 4)
     assert "/2021ps/" in havlicek.photo_source_url
     with Image.open(havlicek.photo.path) as icon:
@@ -628,13 +527,13 @@ def test_deputy_who_is_also_minister_stays_in_sample_after_mandate(web):
 def test_due_sources_respect_interval():
     fresh = web_source(collect_interval_minutes=60)
     CollectionRun.objects.create(source=fresh)
-    stale = Source.objects.create(name="B", layer="B", platform="web", url="https://b.example/")
+    stale = Source.objects.create(name="B", layer="M", platform="web", url="https://b.example/")
     run = CollectionRun.objects.create(source=stale)
     CollectionRun.objects.filter(pk=run.pk).update(
         started_at=timezone.now() - datetime.timedelta(hours=2)
     )
     Source.objects.create(
-        name="Off", layer="B", platform="web", url="https://c.example/", is_active=False
+        name="Off", layer="M", platform="web", url="https://c.example/", is_active=False
     )
     assert [s.name for s in due_sources()] == ["B"]
 
@@ -652,8 +551,8 @@ def test_import_sources_mainstream_is_idempotent():
     path = "apps/ingestion/sources/mainstream.json"
     call_command("import_sources", path, stdout=io.StringIO())
     call_command("import_sources", path, stdout=io.StringIO())
-    assert Source.objects.filter(layer="D").count() == 7
-    assert Actor.objects.filter(layer="D", actor_type="media").count() == 7
+    assert Source.objects.filter(layer="M").count() == 7
+    assert Actor.objects.filter(layer="M", actor_type="media").count() == 7
     assert SourceFeed.objects.count() == 10
     assert Source.objects.get(name="Novinky.cz").collector_config["rubrics_in_scope"]
     irozhlas = Source.objects.get(name="iROZHLAS")
@@ -703,10 +602,10 @@ def test_rubric_scope_include_exclude_and_unknown():
 @pytest.mark.django_db
 def test_update_scope_reextracts_rubric_and_requeues():
     source = Source.objects.create(
-        name="N", layer="D", platform="web", url="https://n.example/",
+        name="N", layer="M", platform="web", url="https://n.example/",
         collector_config={"rubrics_in_scope": ["Zahraniční"]},
     )  # fmt: skip
-    actor = Actor.objects.create(name="N", actor_type="media", layer="D")
+    actor = Actor.objects.create(name="N", actor_type="media", layer="M")
     ActorAccount.objects.create(actor=actor, source=source, account_id="")
     url = "https://www.novinky.cz/clanek/zahranicni-evropa-fico-1"
     _, doc = save_item(
@@ -767,7 +666,7 @@ def test_listing_feed_collects_with_origin_and_text_language(web):
         .replace('lang="cs"', 'lang="en"')
         .replace(
             "</article>",
-            '<span class="source-link" data-source-url="https://t.me/kanal"></span></article>',
+            '<span class="source-link" data-source-url="https://www.ceskenoviny.cz/zpravy/1234567"></span></article>',
         )
     )
     web.add("https://zpravy.example/a/1", page)
@@ -775,7 +674,7 @@ def test_listing_feed_collects_with_origin_and_text_language(web):
 
     assert (run.status, run.found, run.new) == ("ok", 1, 1)
     doc = Document.objects.get()
-    assert doc.meta["origin_urls"] == ["https://t.me/kanal"]
+    assert doc.meta["origin_urls"] == ["https://www.ceskenoviny.cz/zpravy/1234567"]
     assert doc.language == "cs"  # шаблонный lang="en" не перебивает язык текста
 
 
@@ -791,12 +690,3 @@ def test_disallowed_child_sitemap_does_not_drop_index(web):
     run = run_collector(source, web.client())
     assert any("zakázáno v robots.txt" in e for e in run.details["errors"])
     assert source.feeds.get().last_error == "Kanál je prázdný"
-
-
-def test_import_sources_attributed():
-    call_command("import_sources", "apps/ingestion/sources/attributed.json", stdout=io.StringIO())
-    sources = Source.objects.filter(layer="A")
-    assert sources.count() == 2
-    assert all(s.attribution_by and s.attribution_url for s in sources)
-    assert Actor.objects.filter(layer="A", actor_type="attributed_network").count() == 2
-    assert Source.objects.get(name="42TCen").feeds.filter(kind="listing").count() == 2

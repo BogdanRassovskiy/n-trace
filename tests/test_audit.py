@@ -148,7 +148,7 @@ class TestAdminAudit:
     def test_create_and_inline(self, researcher_client):
         source = SourceFactory()
         data = actor_form(
-            Actor(name="Nový kanál", actor_type="channel", layer="C"),
+            Actor(name="Nové médium", actor_type="media", layer="M"),
             **{
                 "accounts-TOTAL_FORMS": "1",
                 "accounts-0-source": str(source.pk),

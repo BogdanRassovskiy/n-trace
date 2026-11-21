@@ -1,4 +1,4 @@
-"""Подключение источников из JSON-файла (идемпотентно): источник, его актор, ленты, каналы.
+"""Подключение источников из JSON-файла (идемпотентно): источник, его актор и ленты.
 
     python manage.py import_sources apps/ingestion/sources/mainstream.json
 
@@ -23,10 +23,6 @@ SOURCE_FIELDS = {
     "collect_interval_minutes",
     "request_delay_seconds",
     "collector_config",
-    "attribution_by",
-    "attribution_url",
-    "external_rating",
-    "external_rating_source",
     "expected_language",
     "min_text_length",
     "stale_after_hours",
@@ -44,7 +40,6 @@ def ensure_actor(source: Source, account_id: str, spec: dict, url: str = "") -> 
         layer=spec.get("layer", source.layer),
         party=spec.get("party", ""),
         role=spec.get("role", ""),
-        is_hybrid=spec.get("is_hybrid", False),
         inclusion_criterion=spec.get("criterion", ""),
         inclusion_reference=spec.get("reference", ""),
     )
@@ -95,14 +90,6 @@ class Command(BaseCommand):
                 if created:
                     audit.log_create(None, obj, note=NOTE)
 
-            if "actor" in spec:  # сайт целиком = один актор (медиа, атрибутированная сеть)
+            if "actor" in spec:  # сайт целиком = один актор (médium, instituce)
                 ensure_actor(source, "", spec["actor"])
-            for channel in spec.get("channels", []):
-                handle = channel["handle"].lstrip("@")
-                ensure_actor(
-                    source,
-                    handle,
-                    {"type": Actor.Type.CHANNEL, **channel.get("actor", {"name": handle})},
-                    url=f"https://t.me/{handle}",
-                )
             self.stdout.write(f"{source.name}: {verb}, kanálů {source.feeds.count()}")

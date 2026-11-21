@@ -17,7 +17,7 @@ class SourceFactory(factory.django.DjangoModelFactory):
         model = Source
 
     name = factory.Sequence(lambda n: f"Zdroj {n}")
-    layer = Layer.ALTERNATIVE
+    layer = Layer.MAINSTREAM
     platform = Platform.WEB
     url = factory.Sequence(lambda n: f"https://source-{n}.example/")
 
@@ -28,7 +28,7 @@ class ActorFactory(factory.django.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: f"Aktér {n}")
     actor_type = Actor.Type.MEDIA
-    layer = Layer.ALTERNATIVE
+    layer = Layer.MAINSTREAM
 
 
 class ActorAccountFactory(factory.django.DjangoModelFactory):

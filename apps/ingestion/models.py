@@ -16,7 +16,7 @@ class SourceFeed(models.Model):
     """RSS/Atom-лента, sitemap или страница-список статей источника.
 
     У медиа — по ленте на политическую рубрику. Страница-список — для сайтов без
-    пригодной ленты (42tcen.com: RSS пуст, вложенные sitemap запрещены в robots.txt);
+    пригодной ленты (weby ministerstev bez RSS: BIS, MV);
     ссылки на статьи отбираются по collector_config["listing_link_pattern"].
     """
 
@@ -170,7 +170,6 @@ class SourceIncident(models.Model):
         SELECTOR_MISSING = "selector_missing", "Chybí selektor"
         HTTP_ERRORS = "http_errors", "Chyby HTTP / přesměrování / časové limity"
         BLOCKED = "blocked", "Captcha / antibot"
-        CHANNEL_UNAVAILABLE = "channel_unavailable", "Kanál není dostupný"
         QUALITY_DROP = "quality_drop", "Pokles průměrného hodnocení kvality"
 
     source = models.ForeignKey(

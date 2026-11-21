@@ -18,7 +18,8 @@ def seed(*args):
 def test_seed_creates_consistent_demo_data():
     seed()
     assert Actor.objects.count() == 40
-    assert set(Actor.objects.values_list("layer", flat=True)) == {"A", "B", "C", "D", "E"}
+    assert set(Actor.objects.values_list("layer", flat=True)) == {"M", "P", "I"}
+    assert Actor.objects.filter(layer="I", actor_type="institution").exists()
     assert Narrative.objects.count() == 5
     assert Narrative.objects.get(code="demo-n003").current_version == 2
     assert Document.objects.exists()
