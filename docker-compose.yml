@@ -1,0 +1,94 @@
+# Локальная разработка: docker compose up --build
+# Сервисы: web (Django), db (PostgreSQL + pgvector), redis, worker и beat (Celery),
+# processor — отдельный воркер очереди processing (эмбеддинги; модель грузится один раз).
+# restart: unless-stopped — после перезагрузки Docker сбор продолжается сам.
+
+x-app: &app
+  restart: unless-stopped
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+    args:
+      REQUIREMENTS: requirements/dev.txt
+  image: ntrace-app-dev  # один образ на web, worker, processor и beat
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-config.settings.dev}
+    DATABASE_URL: postgres://${POSTGRES_USER:-ntrace}:${POSTGRES_PASSWORD:-ntrace}@db:5432/${POSTGRES_DB:-ntrace}
+    REDIS_URL: redis://redis:6379/0
+  volumes:
+    - .:/app
+    - hfcache:/home/app/.cache/huggingface  # модель эмбеддингов скачивается один раз
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ntrace}
+      POSTGRES_USER: ${POSTGRES_USER:-ntrace}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ntrace}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/00-pgvector.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    <<: *app
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-config.settings.dev}
+      DATABASE_URL: postgres://${POSTGRES_USER:-ntrace}:${POSTGRES_PASSWORD:-ntrace}@db:5432/${POSTGRES_DB:-ntrace}
+      REDIS_URL: redis://redis:6379/0
+      RUN_MIGRATIONS: "1"
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz/', timeout=4)"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    <<: *app
+    command: celery -A config worker --loglevel=info
+
+  processor:
+    <<: *app
+    command: celery -A config worker -Q processing --concurrency=1 --loglevel=info -n processing@%h
+
+  beat:
+    <<: *app
+    command: celery -A config beat --loglevel=info --schedule /tmp/celerybeat-schedule
+
+volumes:
+  pgdata:
+  hfcache:

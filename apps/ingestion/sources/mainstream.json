@@ -1,0 +1,191 @@
+{
+  "sources": [
+    {
+      "name": "ČT24",
+      "url": "https://ct24.ceskatelevize.cz/",
+      "layer": "D",
+      "platform": "web",
+      "collect_interval_minutes": 30,
+      "request_delay_seconds": 3,
+      "feeds": [
+        {
+          "url": "https://ct24.ceskatelevize.cz/rss"
+        }
+      ],
+      "actor": {
+        "name": "ČT24",
+        "type": "media",
+        "criterion": "Mainstreamové médium ze seznamu README §2 (vrstva D)"
+      },
+      "collector_config": {
+        "rubrics_in_scope": [
+          "Domácí",
+          "Svět",
+          "Ekonomika"
+        ]
+      }
+    },
+    {
+      "name": "iROZHLAS",
+      "url": "https://www.irozhlas.cz/",
+      "layer": "D",
+      "platform": "web",
+      "collect_interval_minutes": 30,
+      "request_delay_seconds": 3,
+      "feeds": [
+        {
+          "url": "https://www.irozhlas.cz/rss/irozhlas/section/zpravy-domov",
+          "rubric": "Domov"
+        },
+        {
+          "url": "https://www.irozhlas.cz/rss/irozhlas/section/zpravy-svet",
+          "rubric": "Svět"
+        }
+      ],
+      "actor": {
+        "name": "iROZHLAS",
+        "type": "media",
+        "criterion": "Mainstreamové médium ze seznamu README §2 (vrstva D)"
+      }
+    },
+    {
+      "name": "Seznam Zprávy",
+      "url": "https://www.seznamzpravy.cz/",
+      "layer": "D",
+      "platform": "web",
+      "collect_interval_minutes": 30,
+      "request_delay_seconds": 3,
+      "feeds": [
+        {
+          "url": "https://www.seznamzpravy.cz/rss"
+        }
+      ],
+      "actor": {
+        "name": "Seznam Zprávy",
+        "type": "media",
+        "criterion": "Mainstreamové médium ze seznamu README §2 (vrstva D)"
+      },
+      "collector_config": {
+        "rubrics_in_scope": [
+          "Domácí",
+          "Svět",
+          "Byznys",
+          "Volby",
+          "Komentáře"
+        ],
+        "rubrics_out_of_scope": [
+          "Byznys / Investice",
+          "Byznys / Magazín Byznys"
+        ]
+      }
+    },
+    {
+      "name": "iDNES.cz",
+      "url": "https://www.idnes.cz/",
+      "layer": "D",
+      "platform": "web",
+      "collect_interval_minutes": 30,
+      "request_delay_seconds": 3,
+      "feeds": [
+        {
+          "url": "https://servis.idnes.cz/rss.aspx?c=zpravodaj"
+        }
+      ],
+      "actor": {
+        "name": "iDNES.cz",
+        "type": "media",
+        "criterion": "Mainstreamové médium ze seznamu README §2 (vrstva D)"
+      },
+      "collector_config": {
+        "rubrics_in_scope": [
+          "Zprávy - Domácí",
+          "Zprávy - Zahraničí",
+          "Ekonomika"
+        ]
+      }
+    },
+    {
+      "name": "Novinky.cz",
+      "url": "https://www.novinky.cz/",
+      "layer": "D",
+      "platform": "web",
+      "collect_interval_minutes": 30,
+      "request_delay_seconds": 3,
+      "feeds": [
+        {
+          "url": "https://www.novinky.cz/rss"
+        }
+      ],
+      "actor": {
+        "name": "Novinky.cz",
+        "type": "media",
+        "criterion": "Mainstreamové médium ze seznamu README §2 (vrstva D)"
+      },
+      "collector_config": {
+        "rubrics_in_scope": [
+          "Domácí",
+          "Zahraniční",
+          "Ekonomika",
+          "Volby",
+          "Válka na Ukrajině",
+          "Komentáře"
+        ]
+      }
+    },
+    {
+      "name": "Blesk.cz",
+      "url": "https://www.blesk.cz/",
+      "layer": "D",
+      "platform": "web",
+      "collect_interval_minutes": 30,
+      "request_delay_seconds": 3,
+      "feeds": [
+        {
+          "url": "https://www.blesk.cz/rss"
+        }
+      ],
+      "actor": {
+        "name": "Blesk.cz",
+        "type": "media",
+        "criterion": "Mainstreamové médium ze seznamu README §2 (vrstva D)"
+      },
+      "collector_config": {
+        "rubrics_in_scope": [
+          "Zprávy / Politika",
+          "Zprávy / Svět",
+          "Zprávy / Válka na Ukrajině",
+          "Zprávy / Epicentrum",
+          "Komunální volby"
+        ]
+      }
+    },
+    {
+      "name": "ČTK — České noviny",
+      "url": "https://www.ceskenoviny.cz/",
+      "layer": "D",
+      "platform": "web",
+      "collect_interval_minutes": 30,
+      "request_delay_seconds": 3,
+      "notes": "Zpravodajská agentura jako událostní základna vrstvy D (README §2).",
+      "feeds": [
+        {
+          "url": "https://www.ceskenoviny.cz/sluzby/rss/cr.php",
+          "rubric": "Z domova"
+        },
+        {
+          "url": "https://www.ceskenoviny.cz/sluzby/rss/svet.php",
+          "rubric": "Ze světa"
+        },
+        {
+          "url": "https://www.ceskenoviny.cz/sluzby/rss/ekonomika.php",
+          "rubric": "Ekonomika"
+        }
+      ],
+      "actor": {
+        "name": "ČTK",
+        "type": "media",
+        "criterion": "Zpravodajská agentura, událostní základna vrstvy D (README §2)"
+      }
+    }
+  ]
+}

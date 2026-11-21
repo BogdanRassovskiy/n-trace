@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Přístup odepřen{% endblock %}
+
+{% block content %}
+  <section class="card auth-card">
+    <h1>Přístup odepřen</h1>
+    {% if user.is_authenticated %}
+      <p>Vaše role: <strong>{{ user_role }}</strong>. Tato sekce je dostupná pouze výzkumníkovi.</p>
+      {% if user_can_view_dashboard %}<p><a href="{% url 'dashboard:index' %}">Přejít do pracovní části</a></p>{% endif %}
+    {% else %}
+      <p><a href="{% url 'login' %}">Přihlásit se</a></p>
+    {% endif %}
+  </section>
+{% endblock %}

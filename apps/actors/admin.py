@@ -1,0 +1,135 @@
+from django.contrib import admin
+from django.templatetags.static import static
+from django.utils.html import format_html
+
+from apps.ingestion.models import SourceFeed
+from apps.panel.audit import AuditedModelAdmin
+
+from .models import (
+    Actor,
+    ActorAccount,
+    ActorInclusionPeriod,
+    ActorMention,
+    ActorPosition,
+    Source,
+)
+
+
+class SourceFeedInline(admin.TabularInline):
+    model = SourceFeed
+    extra = 0
+    fields = [
+        "url",
+        "kind",
+        "rubric",
+        "is_active",
+        "last_success_at",
+        "last_item_count",
+        "last_error",
+    ]
+    readonly_fields = ["last_success_at", "last_item_count", "last_error"]
+
+
+@admin.register(Source)
+class SourceAdmin(AuditedModelAdmin):
+    list_display = ["name", "layer", "platform", "url", "is_active", "collect_interval_minutes"]
+    list_filter = ["layer", "platform", "is_active"]
+    search_fields = ["name", "url", "feeds__url"]
+    inlines = [SourceFeedInline]
+
+
+def photo_icon(actor, size=32):
+    # media/ не хранится в git: без файла показываем заглушку из static.
+    url = actor.photo.url if actor.photo else static("img/actor-placeholder.svg")
+    return format_html(
+        '<img src="{}" width="{}" height="{}" alt="" style="border-radius:50%;object-fit:cover">',
+        url,
+        size,
+        size,
+    )
+
+
+class ActorInclusionPeriodInline(admin.TabularInline):
+    model = ActorInclusionPeriod
+    extra = 0
+
+
+class ActorPositionInline(admin.TabularInline):
+    model = ActorPosition
+    extra = 0
+    fields = ["kind", "title", "organization", "start_date", "end_date", "source_url"]
+
+
+class ActorMentionInline(admin.TabularInline):
+    model = ActorMention
+    extra = 0
+    fields = ["title", "document", "quote", "created_at"]
+    readonly_fields = fields
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class ActorAccountInline(admin.TabularInline):
+    model = ActorAccount
+    extra = 0
+    autocomplete_fields = ["source"]
+
+
+@admin.register(Actor)
+class ActorAdmin(AuditedModelAdmin):
+    list_display = [
+        "icon", "name", "actor_type", "layer", "party", "role", "office_status", "is_hybrid",
+        "status",
+    ]  # fmt: skip
+    list_display_links = ["icon", "name"]
+    readonly_fields = ["photo_preview", "office_status"]
+    list_filter = [
+        "layer", "actor_type", "status", "office_status", "added_automatically", "manual_inclusion",
+        "is_hybrid",
+        "security_portfolio", "activity_cohort", "party",
+    ]  # fmt: skip
+    search_fields = ["name", "party", "role", "positions__title", "accounts__account_id"]
+    inlines = [
+        ActorPositionInline, ActorInclusionPeriodInline, ActorMentionInline, ActorAccountInline,
+    ]  # fmt: skip
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        form.instance.refresh_role()  # funkce upravené v inline → souhrn a stav funkce
+
+    @admin.display(description="")
+    def icon(self, actor):
+        return photo_icon(actor)
+
+    @admin.display(description="ikona")
+    def photo_preview(self, actor):
+        return photo_icon(actor, 64)
+
+
+@admin.register(ActorAccount)
+class ActorAccountAdmin(AuditedModelAdmin):
+    list_display = ["account_id", "actor", "source", "url"]
+    list_filter = ["source__layer", "source__platform"]
+    search_fields = ["account_id", "actor__name", "url"]
+    autocomplete_fields = ["actor", "source"]
+
+
+@admin.register(ActorPosition)
+class ActorPositionAdmin(AuditedModelAdmin):
+    list_display = ["actor", "title", "kind", "organization", "start_date", "end_date"]
+    list_filter = ["kind", "end_date"]
+    search_fields = ["actor__name", "title", "organization"]
+    autocomplete_fields = ["actor"]
+
+
+@admin.register(ActorMention)
+class ActorMentionAdmin(admin.ModelAdmin):
+    list_display = ["actor", "title", "document", "created_at"]
+    list_filter = ["actor__added_automatically", "document__source"]
+    search_fields = ["actor__name", "title", "quote"]
+    readonly_fields = ["actor", "document", "title", "quote", "created_at"]
+
+    def has_add_permission(self, request):
+        return False

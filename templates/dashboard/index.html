@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Přehled{% endblock %}
+
+{% block content %}
+  <h1>Pracovní část</h1>
+  <p class="muted">
+    Zde bude seznam aktérů, grafy narativů v čase, režim srovnání
+    a teplotní mapa (README §7.1, etapa 8).
+  </p>
+
+  <section class="card">
+    <h2>Kontrola grafů</h2>
+    <p class="muted">Demonstrační data: ověřuje, že se ECharts načítá a kreslí na canvas.</p>
+    <div id="demo-chart" class="chart" role="img" aria-label="Demonstrační graf"></div>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'vendor/echarts.min.js' %}"></script>
+  <script src="{% static 'js/demo-chart.js' %}"></script>
+{% endblock %}
