@@ -13,7 +13,7 @@ from apps.documents.models import Document
 
 from .collectors import collector_for
 from .extract import extract_article
-from .http import PoliteClient, RobotsDisallowed
+from .http import PoliteClient, RobotsDisallowed, ignores_robots
 from .models import CollectionRun
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ RECHECK_AFTER = [datetime.timedelta(days=1), datetime.timedelta(days=7)]  # READ
 def run_collector(source: Source, client: PoliteClient | None = None) -> CollectionRun:
     """Один запуск сбора по источнику с записью CollectionRun. Используется и командой collect."""
     run = CollectionRun.objects.create(source=source)
-    client = client or PoliteClient(delay=source.request_delay_seconds)
+    client = client or PoliteClient.for_source(source)
     collector = collector_for(source)(source, client)
     status = CollectionRun.Status.OK
     try:
@@ -140,6 +140,7 @@ def recheck_documents(limit: int = 200) -> dict:
     try:
         for doc in documents_to_recheck()[:limit]:
             client.delay = doc.source.request_delay_seconds
+            client.ignore_robots = ignores_robots(doc.source)
             try:
                 outcome = recheck_document(doc, client)
             except Exception as exc:  # noqa: BLE001
@@ -192,7 +193,7 @@ def check_golden_pages() -> dict:
 
     now, statuses = timezone.now(), {}
     for source in monitoring.golden_sources():
-        with PoliteClient(delay=source.request_delay_seconds) as client:
+        with PoliteClient.for_source(source) as client:
             result = monitoring.check_golden(source, now, client)
         if result is not None:
             monitoring.apply(source, result, now)

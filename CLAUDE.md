@@ -16,3 +16,10 @@
 - Jedna etapa = jedna větev `stage-N-…`, commit obsahuje „Etapa N“ / „Этап N“.
 - Průběh etap se zaznamenává na Trello nástěnce „NTrace — разработка (диплом)“.
 - Před commitem: `ruff format . && ruff check .` a `pytest` (v kontejneru `web`).
+
+## Sběr dat
+
+- robots.txt se respektuje. Výjimka jen u konkrétního zdroje rozhodnutím autora projektu:
+  `collector_config.ignore_robots` + `ignore_robots_reason` (bez důvodu neplatí); pauzy a
+  otevřený User-Agent zůstávají.
+- Antibotové ochrany, captcha, přihlášení a paywally se neobcházejí.

@@ -131,6 +131,30 @@ class TestPoliteClient:
             client.get("https://a.example/private/x")
         assert web.requests.count("https://a.example/robots.txt") == 1
 
+    def test_robots_exception_only_with_reason(self, web):
+        from apps.ingestion.http import ignores_robots
+
+        web.add(
+            "https://b.example/robots.txt",
+            "User-agent: Googlebot\nDisallow:\n\nUser-agent: *\nDisallow: /\n",
+        )
+        web.add("https://b.example/rss", "<rss/>")
+        strict = web.client()
+        with pytest.raises(RobotsDisallowed):
+            strict.get("https://b.example/rss")
+        strict.ignore_robots = True
+        assert strict.get("https://b.example/rss").ok
+
+        source = Source(
+            name="B", url="https://b.example/", collector_config={"ignore_robots": True}
+        )
+        assert not ignores_robots(source)  # bez důvodu výjimka neplatí
+        source.collector_config["ignore_robots_reason"] = "Rozhodnutí výzkumníka"
+        assert ignores_robots(source)
+        client = PoliteClient.for_source(source)
+        assert client.ignore_robots and client.delay == source.request_delay_seconds
+        client.close()
+
     def test_longest_match_wins(self):
         from apps.ingestion.robots import Robots
 

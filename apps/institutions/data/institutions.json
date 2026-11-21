@@ -77,7 +77,10 @@
       "abbreviation": "MPO",
       "group": "ministry",
       "url": "https://mpo.gov.cz/",
-      "notes": "Nesbírá se: robots.txt povoluje web jen vyhledávačům (User-agent: * Disallow: /). Témata MPO zachytí média; případně požádat o povolení."
+      "notes": "Kanál ověřen 2026-11-21. robots.txt povoluje web jen vyhledávačům; sbírá se s výslovnou výjimkou (ignore_robots_reason u zdroje).",
+      "sources": [
+        "https://mpo.gov.cz/cz/rozcestnik.rss"
+      ]
     },
     {
       "name": "Ministerstvo spravedlnosti",

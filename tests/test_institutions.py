@@ -31,7 +31,7 @@ def test_import_institution_sources_and_registry():
     call_command("import_institutions", stdout=out)
     call_command("import_institutions", stdout=out)  # idempotentně
 
-    assert Source.objects.filter(layer="I").count() == 14
+    assert Source.objects.filter(layer="I").count() == 15
     assert Institution.objects.count() == 21
     assert Institution.objects.filter(group=Institution.Group.MINISTRY).count() == 14
     assert Institution.objects.filter(group=Institution.Group.GOVERNMENT_OFFICE).count() == 1
@@ -43,10 +43,15 @@ def test_import_institution_sources_and_registry():
     assert mf.sources.get().url == "https://mf.gov.cz/cs/rss/tiskove-zpravy-rss"
     assert mf.actor.accounts.get().source == mf.sources.get()  # dokumenty kanálu patří MF
     with_feeds = Institution.objects.filter(group="ministry", sources__isnull=False).distinct()
-    assert with_feeds.count() == 11  # bez MPO (robots.txt), MD a MZe (antibot)
+    assert with_feeds.count() == 12  # bez MD a MZe (antibot se neobchází)
+    from apps.ingestion.http import ignores_robots
+
     mpo = Institution.objects.get(abbreviation="MPO")
-    assert not mpo.sources.exists() and "robots.txt" in mpo.notes
-    assert (mpo.actor.layer, mpo.actor.actor_type) == ("I", Actor.Type.INSTITUTION)
+    assert ignores_robots(mpo.sources.get())  # výjimka z robots.txt s důvodem
+    assert not any(ignores_robots(s) for s in Source.objects.exclude(pk=mpo.sources.get().pk))
+    md = Institution.objects.get(abbreviation="MD")
+    assert not md.sources.exists() and "antibot" in md.notes
+    assert (md.actor.layer, md.actor.actor_type) == ("I", Actor.Type.INSTITUTION)
     assert Institution.objects.get(abbreviation="ÚV").sources.exists()
     assert Institution.objects.get(abbreviation="VZ").officials.get().actor_type == "official"
 

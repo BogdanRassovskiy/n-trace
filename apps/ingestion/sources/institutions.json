@@ -350,6 +350,32 @@
       "collect_interval_minutes": 360,
       "request_delay_seconds": 5,
       "stale_after_hours": 720
+    },
+    {
+      "name": "Ministerstvo průmyslu a obchodu — aktuality",
+      "url": "https://mpo.gov.cz/cz/rozcestnik.rss",
+      "layer": "I",
+      "platform": "web",
+      "collect_interval_minutes": 360,
+      "request_delay_seconds": 5,
+      "stale_after_hours": 720,
+      "feeds": [
+        {
+          "url": "https://mpo.gov.cz/cz/rozcestnik.rss",
+          "rubric": "Aktuality"
+        }
+      ],
+      "actor": {
+        "name": "Ministerstvo průmyslu a obchodu ČR",
+        "type": "institution",
+        "criterion": "Ministerstvo — vrstva I (README §2)"
+      },
+      "collector_config": {
+        "ignore_robots": true,
+        "ignore_robots_reason": "robots.txt MPO povoluje web jen vyhledávačům (User-agent: * Disallow: /). Výjimka rozhodnutím výzkumníka 2026-11-21: veřejné tiskové zprávy ústředního orgánu státní správy, vytěžování textů pro vědecký výzkum (čl. 3 směrnice DSM, § 39d AZ), sběr se stejnými pauzami a otevřeným User-Agentem.",
+        "max_articles": 20
+      },
+      "notes": "Souhrnný kanál MPO (rozcestnik.rss). Sbírá se s výjimkou z robots.txt — viz ignore_robots_reason."
     }
   ]
 }

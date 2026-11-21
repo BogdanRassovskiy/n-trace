@@ -24,6 +24,12 @@ def _site(host: str) -> str:
     return ".".join(host.lower().split(".")[-2:])
 
 
+def ignores_robots(source) -> bool:
+    """Výjimka platí, jen když je u zdroje zapsán i důvod (rozhodnutí je dohledatelné)."""
+    config = source.collector_config or {}
+    return bool(config.get("ignore_robots")) and bool(config.get("ignore_robots_reason"))
+
+
 class RobotsDisallowed(Exception):
     """robots.txt запрещает адрес — не скачиваем."""
 
@@ -57,6 +63,9 @@ class PoliteClient:
     timeout: float = 20.0
     transport: httpx.BaseTransport | None = None
     user_agent: str = field(default_factory=lambda: settings.NTRACE["CRAWLER_USER_AGENT"])
+    # Výjimka z robots.txt jen pro zdroj s výslovným rozhodnutím výzkumníka
+    # (collector_config.ignore_robots + ignore_robots_reason). Pauzy a User-Agent platí dál.
+    ignore_robots: bool = False
 
     def __post_init__(self):
         self._client = httpx.Client(
@@ -93,7 +102,16 @@ class PoliteClient:
         return Robots(cached)
 
     def allowed(self, url: str) -> bool:
+        if self.ignore_robots:
+            return True
         return self._robots(url).can_fetch(self.user_agent, url)
+
+    @classmethod
+    def for_source(cls, source, **kwargs) -> "PoliteClient":
+        """Klient s pauzou a případnou výjimkou z robots.txt podle nastavení zdroje."""
+        return cls(
+            delay=source.request_delay_seconds, ignore_robots=ignores_robots(source), **kwargs
+        )
 
     # --- запросы -----------------------------------------------------------------------
 
