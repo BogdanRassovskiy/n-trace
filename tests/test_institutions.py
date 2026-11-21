@@ -31,7 +31,7 @@ def test_import_institution_sources_and_registry():
     call_command("import_institutions", stdout=out)
     call_command("import_institutions", stdout=out)  # idempotentně
 
-    assert Source.objects.filter(layer="I").count() == 3
+    assert Source.objects.filter(layer="I").count() == 14
     assert Institution.objects.count() == 21
     assert Institution.objects.filter(group=Institution.Group.MINISTRY).count() == 14
     assert Institution.objects.filter(group=Institution.Group.GOVERNMENT_OFFICE).count() == 1
@@ -39,9 +39,15 @@ def test_import_institution_sources_and_registry():
     bis = Institution.objects.get(abbreviation="BIS")
     assert bis.sources.get().url == "https://www.bis.cz/aktuality/"
     assert (bis.actor.layer, bis.actor.actor_type) == ("I", Actor.Type.INSTITUTION)
-    mf = Institution.objects.get(abbreviation="MF")  # ministerstvo zatím bez kanálu
-    assert not mf.sources.exists()
-    assert (mf.actor.layer, mf.actor.actor_type) == ("I", Actor.Type.INSTITUTION)
+    mf = Institution.objects.get(abbreviation="MF")
+    assert mf.sources.get().url == "https://mf.gov.cz/cs/rss/tiskove-zpravy-rss"
+    assert mf.actor.accounts.get().source == mf.sources.get()  # dokumenty kanálu patří MF
+    with_feeds = Institution.objects.filter(group="ministry", sources__isnull=False).distinct()
+    assert with_feeds.count() == 11  # bez MPO (robots.txt), MD a MZe (antibot)
+    mpo = Institution.objects.get(abbreviation="MPO")
+    assert not mpo.sources.exists() and "robots.txt" in mpo.notes
+    assert (mpo.actor.layer, mpo.actor.actor_type) == ("I", Actor.Type.INSTITUTION)
+    assert Institution.objects.get(abbreviation="ÚV").sources.exists()
     assert Institution.objects.get(abbreviation="VZ").officials.get().actor_type == "official"
 
     # Ministr zůstává politikem ve své vrstvě — žádný duplikát.

@@ -678,6 +678,44 @@ def test_listing_feed_collects_with_origin_and_text_language(web):
     assert doc.language == "cs"  # шаблонный lang="en" не перебивает язык текста
 
 
+def test_listing_strip_query_merges_liferay_links(web):
+    source = web_source(
+        collector_config={"listing_link_pattern": r"^/tz/-/clanek/", "listing_strip_query": True}
+    )
+    source.feeds.update(url="https://zpravy.example/tz", kind=SourceFeed.Kind.LISTING)
+    web.add(
+        "https://zpravy.example/tz",
+        '<a href="/tz/-/clanek/zakon?_redirect=a%3D1">A</a>'
+        '<a href="/tz/-/clanek/zakon?_redirect=a%3D2">A znovu</a>',
+    )
+    web.add("https://zpravy.example/tz/-/clanek/zakon", article_html())
+    run = run_collector(source, web.client())
+    assert (run.status, run.found, run.new) == ("ok", 1, 1)
+    assert Document.objects.get().url == "https://zpravy.example/tz/-/clanek/zakon"
+
+
+def test_prefer_feed_date_and_title_xpath(web):
+    source = web_source(
+        collector_config={
+            "prefer_feed_date": True,
+            "title_xpath": "//h2[contains(@class, 'novinkaNadpis')]",
+        }
+    )
+    web.add(
+        "https://zpravy.example/rss",
+        rss(("https://zpravy.example/a", "Z kanálu", "Thu, 12 Nov 2026 15:08:00 +0100")),
+    )
+    page = article_html(published="2024-11-20T00:00:00+01:00", title="Novinky a média").replace(
+        "<article>", '<article><h2 class="novinkaNadpis">Skutečný nadpis článku</h2>'
+    )
+    web.add("https://zpravy.example/a", page)
+    run_collector(source, web.client())
+    doc = Document.objects.get()
+    assert doc.title == "Skutečný nadpis článku"
+    assert doc.date_source == Document.DateSource.FEED
+    assert doc.published_at == datetime.datetime(2026, 11, 12, 14, 8, tzinfo=datetime.UTC)
+
+
 def test_disallowed_child_sitemap_does_not_drop_index(web):
     source = web_source()
     source.feeds.update(url="https://zpravy.example/index.xml", kind=SourceFeed.Kind.SITEMAP)

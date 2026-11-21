@@ -5,67 +5,89 @@
       "abbreviation": "ÚV",
       "group": "government_office",
       "url": "https://vlada.gov.cz/",
-      "notes": "Tiskové zprávy vlády a premiéra; zahrnuje i sekretariát Bezpečnostní rady státu. Kanál k ověření."
+      "notes": "Tiskové zprávy vlády a premiéra; zahrnuje i sekretariát Bezpečnostní rady státu. Kanál ověřen 2026-11-21.",
+      "sources": [
+        "https://vlada.gov.cz/cs/urad/RSS/rss.xml"
+      ]
     },
     {
       "name": "Ministerstvo dopravy",
       "abbreviation": "MD",
       "group": "ministry",
       "url": "https://md.gov.cz/",
-      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+      "notes": "Nesbírá se: web chráněn antibotem F5 (JavaScriptová výzva /TSPD/), obcházení se nepoužívá."
     },
     {
       "name": "Ministerstvo financí",
       "abbreviation": "MF",
       "group": "ministry",
       "url": "https://mf.gov.cz/",
-      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+      "notes": "Kanál ověřen 2026-11-21.",
+      "sources": [
+        "https://mf.gov.cz/cs/rss/tiskove-zpravy-rss"
+      ]
     },
     {
       "name": "Ministerstvo kultury",
       "abbreviation": "MK",
       "group": "ministry",
-      "url": "https://mk.gov.cz/",
-      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+      "url": "https://www.mk.gov.cz/",
+      "notes": "Kanál ověřen 2026-11-21.",
+      "sources": [
+        "https://www.mk.gov.cz/novinky-a-media-cs-4"
+      ]
     },
     {
       "name": "Ministerstvo obrany",
       "abbreviation": "MO",
       "group": "ministry",
-      "url": "https://mo.gov.cz/",
+      "url": "https://mocr.mo.gov.cz/",
       "minister": {
         "name": "Jaromír Zůna",
         "role": "místopředseda vlády a ministr obrany",
         "reference": "https://vlada.gov.cz/cz/vlada/"
-      }
+      },
+      "sources": [
+        "https://mocr.mo.gov.cz/"
+      ],
+      "notes": "Kanál ověřen 2026-11-21."
     },
     {
       "name": "Ministerstvo pro místní rozvoj",
       "abbreviation": "MMR",
       "group": "ministry",
       "url": "https://mmr.gov.cz/",
-      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+      "notes": "Kanál ověřen 2026-11-21.",
+      "sources": [
+        "https://mmr.gov.cz/cs/ostatni/web/rss?rss=Novinky"
+      ]
     },
     {
       "name": "Ministerstvo práce a sociálních věcí",
       "abbreviation": "MPSV",
       "group": "ministry",
       "url": "https://mpsv.gov.cz/",
-      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+      "notes": "Kanál ověřen 2026-11-21.",
+      "sources": [
+        "https://mpsv.gov.cz/feed/tiskove-zpravy"
+      ]
     },
     {
       "name": "Ministerstvo průmyslu a obchodu",
       "abbreviation": "MPO",
       "group": "ministry",
       "url": "https://mpo.gov.cz/",
-      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+      "notes": "Nesbírá se: robots.txt povoluje web jen vyhledávačům (User-agent: * Disallow: /). Témata MPO zachytí média; případně požádat o povolení."
     },
     {
       "name": "Ministerstvo spravedlnosti",
       "abbreviation": "MSp",
       "group": "ministry",
       "url": "https://msp.gov.cz/",
-      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+      "notes": "Kanál ověřen 2026-11-21.",
+      "sources": [
+        "https://msp.gov.cz/web/msp/tiskove-zpravy"
+      ]
     },
     {
       "name": "Ministerstvo vnitra",
@@ -87,40 +109,52 @@
       "abbreviation": "MZV",
       "group": "ministry",
       "url": "https://mzv.gov.cz/",
-      "notes": "Strategická komunikace.",
+      "notes": "Kanál ověřen 2026-11-21.",
       "minister": {
         "name": "Petr Macinka",
         "role": "místopředseda vlády a ministr zahraničních věcí",
         "reference": "https://vlada.gov.cz/cz/vlada/"
-      }
+      },
+      "sources": [
+        "https://mzv.gov.cz/jnp/cz/udalosti_a_media/tiskove_zpravy/index.html"
+      ]
     },
     {
       "name": "Ministerstvo zdravotnictví",
       "abbreviation": "MZ",
       "group": "ministry",
       "url": "https://mzd.gov.cz/",
-      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+      "notes": "Kanál ověřen 2026-11-21.",
+      "sources": [
+        "https://mzd.gov.cz/feed/"
+      ]
     },
     {
       "name": "Ministerstvo zemědělství",
       "abbreviation": "MZe",
       "group": "ministry",
       "url": "https://mze.gov.cz/",
-      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+      "notes": "Nesbírá se: web vrací automatům stránku „Upozornění“ (antibot), obcházení se nepoužívá."
     },
     {
       "name": "Ministerstvo školství, mládeže a tělovýchovy",
       "abbreviation": "MŠMT",
       "group": "ministry",
       "url": "https://msmt.gov.cz/",
-      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+      "notes": "Kanál ověřen 2026-11-21.",
+      "sources": [
+        "https://msmt.gov.cz/aktuality"
+      ]
     },
     {
       "name": "Ministerstvo životního prostředí",
       "abbreviation": "MŽP",
       "group": "ministry",
       "url": "https://mzp.gov.cz/",
-      "notes": "Adresa webu a kanál tiskových zpráv k ověření; ministra doplní sync_politicians / ručně."
+      "notes": "Kanál ověřen 2026-11-21.",
+      "sources": [
+        "https://mzp.gov.cz/cz/rss.xml"
+      ]
     },
     {
       "name": "Národní úřad pro kybernetickou a informační bezpečnost",
@@ -216,5 +250,6 @@
     }
   ],
   "checked": "2026-11-03",
-  "_comment": "Osoby a adresy BIS, VZ, ÚZSI, NÚKIB, MV, MO, MZV, PČR, AČR ověřeny k datu checked. Úřad vlády a ostatní ministerstva přidány bez ověření kanálů (poznámka „k ověření“). Při změně ve funkci: vyřadit aktéra (období zařazení) a přidat nového."
+  "_comment": "Osoby a adresy BIS, VZ, ÚZSI, NÚKIB, MV, MO, MZV, PČR, AČR ověřeny k datu checked; kanály Úřadu vlády a ministerstev k datu checked_ministries. Při změně ve funkci: vyřadit aktéra (období zařazení) a přidat nového.",
+  "checked_ministries": "2026-11-21"
 }

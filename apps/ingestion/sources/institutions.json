@@ -79,6 +79,277 @@
         "max_articles": 20,
         "max_date_lag_days": 730
       }
+    },
+    {
+      "name": "Úřad vlády — aktuality",
+      "url": "https://vlada.gov.cz/cs/urad/RSS/rss.xml",
+      "feeds": [
+        {
+          "url": "https://vlada.gov.cz/cs/urad/RSS/rss.xml",
+          "rubric": "Aktuality"
+        }
+      ],
+      "actor": {
+        "name": "Úřad vlády České republiky",
+        "type": "institution",
+        "criterion": "Úřad vlády — vrstva I (README §2)"
+      },
+      "notes": "Hlavní kanál RSS Úřadu vlády (tiskové zprávy vlády a premiéra, usnesení výborů). Robots povoluje; /rss/ zakázáno, kanál je na /cs/urad/RSS/. Datum ze stránky je chybné (htmldate), proto prefer_feed_date.",
+      "layer": "I",
+      "platform": "web",
+      "collect_interval_minutes": 360,
+      "request_delay_seconds": 5,
+      "stale_after_hours": 720,
+      "collector_config": {
+        "prefer_feed_date": true
+      }
+    },
+    {
+      "name": "Ministerstvo financí — tiskové zprávy",
+      "url": "https://mf.gov.cz/cs/rss/tiskove-zpravy-rss",
+      "feeds": [
+        {
+          "url": "https://mf.gov.cz/cs/rss/tiskove-zpravy-rss",
+          "rubric": "Tiskové zprávy"
+        }
+      ],
+      "actor": {
+        "name": "Ministerstvo financí ČR",
+        "type": "institution",
+        "criterion": "Ministerstvo — vrstva I (README §2)"
+      },
+      "layer": "I",
+      "platform": "web",
+      "collect_interval_minutes": 360,
+      "request_delay_seconds": 5,
+      "stale_after_hours": 720
+    },
+    {
+      "name": "Ministerstvo pro místní rozvoj — novinky",
+      "url": "https://mmr.gov.cz/cs/ostatni/web/rss?rss=Novinky",
+      "feeds": [
+        {
+          "url": "https://mmr.gov.cz/cs/ostatni/web/rss?rss=Novinky",
+          "rubric": "Novinky"
+        }
+      ],
+      "actor": {
+        "name": "Ministerstvo pro místní rozvoj ČR",
+        "type": "institution",
+        "criterion": "Ministerstvo — vrstva I (README §2)"
+      },
+      "notes": "Kanál „Tiskové zprávy“ se od ledna 2024 neaktualizuje; „Novinky“ obsahují aktuální tiskové zprávy.",
+      "layer": "I",
+      "platform": "web",
+      "collect_interval_minutes": 360,
+      "request_delay_seconds": 5,
+      "stale_after_hours": 720
+    },
+    {
+      "name": "Ministerstvo práce a sociálních věcí — tiskové zprávy",
+      "url": "https://mpsv.gov.cz/feed/tiskove-zpravy",
+      "feeds": [
+        {
+          "url": "https://mpsv.gov.cz/feed/tiskove-zpravy",
+          "rubric": "Tiskové zprávy"
+        }
+      ],
+      "actor": {
+        "name": "Ministerstvo práce a sociálních věcí ČR",
+        "type": "institution",
+        "criterion": "Ministerstvo — vrstva I (README §2)"
+      },
+      "layer": "I",
+      "platform": "web",
+      "collect_interval_minutes": 360,
+      "request_delay_seconds": 5,
+      "stale_after_hours": 720,
+      "collector_config": {
+        "prefer_feed_date": true
+      },
+      "notes": "Datum ze stránky je chybné (htmldate), proto prefer_feed_date."
+    },
+    {
+      "name": "Ministerstvo zdravotnictví — aktuality",
+      "url": "https://mzd.gov.cz/feed/",
+      "feeds": [
+        {
+          "url": "https://mzd.gov.cz/feed/",
+          "rubric": "Aktuality"
+        }
+      ],
+      "actor": {
+        "name": "Ministerstvo zdravotnictví ČR",
+        "type": "institution",
+        "criterion": "Ministerstvo — vrstva I (README §2)"
+      },
+      "notes": "Kanál kategorie tiskových zpráv je prázdný; sbírá se souhrnný kanál webu (obsahuje i dotační výzvy).",
+      "layer": "I",
+      "platform": "web",
+      "collect_interval_minutes": 360,
+      "request_delay_seconds": 5,
+      "stale_after_hours": 720
+    },
+    {
+      "name": "Ministerstvo životního prostředí — aktuality",
+      "url": "https://mzp.gov.cz/cz/rss.xml",
+      "request_delay_seconds": 10,
+      "feeds": [
+        {
+          "url": "https://mzp.gov.cz/cz/rss.xml",
+          "rubric": "Aktuality"
+        }
+      ],
+      "actor": {
+        "name": "Ministerstvo životního prostředí ČR",
+        "type": "institution",
+        "criterion": "Ministerstvo — vrstva I (README §2)"
+      },
+      "notes": "robots.txt: Crawl-delay 10. Datum ze stránky je chybné (htmldate), proto prefer_feed_date.",
+      "layer": "I",
+      "platform": "web",
+      "collect_interval_minutes": 360,
+      "stale_after_hours": 720,
+      "collector_config": {
+        "prefer_feed_date": true
+      }
+    },
+    {
+      "name": "Ministerstvo školství, mládeže a tělovýchovy — aktuality",
+      "url": "https://msmt.gov.cz/aktuality",
+      "feeds": [
+        {
+          "url": "https://msmt.gov.cz/aktuality",
+          "kind": "listing",
+          "rubric": "Aktuality"
+        }
+      ],
+      "actor": {
+        "name": "Ministerstvo školství, mládeže a tělovýchovy ČR",
+        "type": "institution",
+        "criterion": "Ministerstvo — vrstva I (README §2)"
+      },
+      "collector_config": {
+        "listing_link_pattern": "^/aktuality/[^/]+$",
+        "max_articles": 20,
+        "max_date_lag_days": 730
+      },
+      "notes": "RSS není. Sbírá se z výpisu aktualit.",
+      "layer": "I",
+      "platform": "web",
+      "collect_interval_minutes": 360,
+      "request_delay_seconds": 5,
+      "stale_after_hours": 720
+    },
+    {
+      "name": "Ministerstvo spravedlnosti — tiskové zprávy",
+      "url": "https://msp.gov.cz/web/msp/tiskove-zpravy",
+      "feeds": [
+        {
+          "url": "https://msp.gov.cz/web/msp/tiskove-zpravy",
+          "kind": "listing",
+          "rubric": "Tiskové zprávy"
+        }
+      ],
+      "actor": {
+        "name": "Ministerstvo spravedlnosti ČR",
+        "type": "institution",
+        "criterion": "Ministerstvo — vrstva I (README §2)"
+      },
+      "collector_config": {
+        "listing_link_pattern": "^/web/msp/tiskove-zpravy/-/clanek/",
+        "listing_strip_query": true,
+        "max_articles": 20,
+        "max_date_lag_days": 730
+      },
+      "notes": "RSS není. Výpis na Liferay: odkazy nesou proměnlivý parametr redirect, proto listing_strip_query.",
+      "layer": "I",
+      "platform": "web",
+      "collect_interval_minutes": 360,
+      "request_delay_seconds": 5,
+      "stale_after_hours": 720
+    },
+    {
+      "name": "Ministerstvo zahraničních věcí — tiskové zprávy",
+      "url": "https://mzv.gov.cz/jnp/cz/udalosti_a_media/tiskove_zpravy/index.html",
+      "request_delay_seconds": 20,
+      "feeds": [
+        {
+          "url": "https://mzv.gov.cz/jnp/cz/udalosti_a_media/tiskove_zpravy/index.html",
+          "kind": "listing",
+          "rubric": "Tiskové zprávy"
+        }
+      ],
+      "actor": {
+        "name": "Ministerstvo zahraničních věcí ČR",
+        "type": "institution",
+        "criterion": "Ministerstvo — vrstva I (README §2)"
+      },
+      "collector_config": {
+        "listing_link_pattern": "^/jnp/cz/udalosti_a_media/tiskove_zpravy/(?!index)[^/]+\\.html$",
+        "max_articles": 20,
+        "max_date_lag_days": 730
+      },
+      "notes": "RSS není (stránka rss.html bez kanálů). robots.txt: Crawl-delay 20.",
+      "layer": "I",
+      "platform": "web",
+      "collect_interval_minutes": 360,
+      "stale_after_hours": 720
+    },
+    {
+      "name": "Ministerstvo kultury — novinky a média",
+      "url": "https://www.mk.gov.cz/novinky-a-media-cs-4",
+      "feeds": [
+        {
+          "url": "https://www.mk.gov.cz/novinky-a-media-cs-4",
+          "kind": "listing",
+          "rubric": "Novinky a média"
+        }
+      ],
+      "actor": {
+        "name": "Ministerstvo kultury ČR",
+        "type": "institution",
+        "criterion": "Ministerstvo — vrstva I (README §2)"
+      },
+      "collector_config": {
+        "listing_link_pattern": "^/novinky-a-media-cs-4/\\d+cs-",
+        "max_articles": 20,
+        "max_date_lag_days": 730,
+        "title_xpath": "//h2[contains(@class, 'novinkaNadpis')]"
+      },
+      "notes": "RSS není. Web nemá robots.txt (404). Nadpis stránky je název rubriky, článek má nadpis v h2.novinkaNadpis.",
+      "layer": "I",
+      "platform": "web",
+      "collect_interval_minutes": 360,
+      "request_delay_seconds": 5,
+      "stale_after_hours": 720
+    },
+    {
+      "name": "Ministerstvo obrany — zpravodajství",
+      "url": "https://mocr.mo.gov.cz/",
+      "feeds": [
+        {
+          "url": "https://mocr.mo.gov.cz/",
+          "kind": "listing",
+          "rubric": "Zpravodajství"
+        }
+      ],
+      "actor": {
+        "name": "Ministerstvo obrany ČR",
+        "type": "institution",
+        "criterion": "Ministerstvo — vrstva I (README §2)"
+      },
+      "collector_config": {
+        "listing_link_pattern": "^/informacni-servis/zpravodajstvi/[^/]+-\\d+/$",
+        "max_articles": 20,
+        "max_date_lag_days": 730
+      },
+      "notes": "RSS není; výpis /informacni-servis/zpravodajstvi/ se načítá skriptem, proto titulní strana. Obsah je na mocr.mo.gov.cz (www.mo.gov.cz přesměrovává).",
+      "layer": "I",
+      "platform": "web",
+      "collect_interval_minutes": 360,
+      "request_delay_seconds": 5,
+      "stale_after_hours": 720
     }
   ]
 }

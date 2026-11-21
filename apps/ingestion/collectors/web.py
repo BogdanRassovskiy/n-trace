@@ -108,10 +108,17 @@ def page_date(html: str, pattern: str) -> datetime.datetime | None:
 
 
 def parse_listing(
-    content: bytes, base_url: str, pattern: str = "", rubric: str = "", xpath: str = ""
+    content: bytes,
+    base_url: str,
+    pattern: str = "",
+    rubric: str = "",
+    xpath: str = "",
+    strip_query: bool = False,
 ) -> list[FeedEntry]:
     """Ссылки на статьи со страницы-списка: тот же сайт, (если задан) шаблон адреса
-    и XPath блока со списком (когда у статей нет общего префикса в адресе, как у МВД)."""
+    и XPath блока со списком (когда у статей нет общего префикса в адресе, как у МВД).
+    strip_query — отбросить параметры: у Liferay (MSp) в ссылке служебный redirect,
+    который меняется от страницы к странице, а статью адресует уже путь."""
     root = lxml.html.fromstring(content)
     host = urlsplit(base_url).netloc
     regex = re.compile(pattern) if pattern else None
@@ -124,6 +131,8 @@ def parse_listing(
             continue
         # Абсолютные ссылки http:// на https-сайте — лишний редирект на каждую статью.
         url = parts._replace(scheme=urlsplit(base_url).scheme).geturl()
+        if strip_query:
+            url = urlsplit(url)._replace(query="").geturl()
         if regex is not None and not regex.search(parts.path):
             continue
         if url not in seen and url.rstrip("/") != base_url.rstrip("/"):
@@ -137,7 +146,10 @@ class WebCollector(Collector):
     max_child_sitemaps — сколько свежих вложенных sitemap читать из индекса (2),
     listing_link_pattern — регулярное выражение пути статьи для лент типа «listing»,
     listing_link_xpath — XPath к атрибутам href ссылок на статьи (по умолчанию все ссылки),
+    listing_strip_query — отбросить параметры у ссылок ze stránky-seznamu (MSp, Liferay),
     date_regex — шаблон даты на странице, если htmldate её не находит (см. page_date),
+    prefer_feed_date — брать дату из ленты, а не со страницы (weby úřadů s chybnou datací),
+    title_xpath — XPath к textu nadpisu, když trafilatura bere název rubriky (MK),
     origin_xpath — XPath к адресам первоисточника на странице (odkaz na zprávu ČTK nebo
     tiskovou zprávu, ze které text vychází); сохраняются в meta["origin_urls"]."""
 
@@ -194,6 +206,7 @@ class WebCollector(Collector):
                         self.config.get("listing_link_pattern", ""),
                         feed.rubric,
                         self.config.get("listing_link_xpath", ""),
+                        bool(self.config.get("listing_strip_query")),
                     )
                 else:
                     entries = parse_rss(result.content, feed.rubric)
@@ -243,6 +256,17 @@ class WebCollector(Collector):
             return
         html = result.text
         extracted = extract_article(html, result.final_url, feed_published_at=entry.published_at)
+        if self.config.get("prefer_feed_date") and entry.published_at is not None:
+            # Datum na stránce je u některých webů úřadů nespolehlivé (htmldate bere datum
+            # revize číselníku apod.); kanál je pak primárním zdrojem — date_source to ukazuje.
+            extracted.published_at, extracted.date_source = (
+                entry.published_at,
+                Document.DateSource.FEED,
+            )
+        if self.config.get("title_xpath"):
+            titles = [t.strip() for t in page_values(html, self.config["title_xpath"]) if t.strip()]
+            if titles:
+                extracted.title = titles[0]
         if self.config.get("date_regex"):
             found = page_date(html, self.config["date_regex"])
             if found is not None:

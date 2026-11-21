@@ -11,7 +11,7 @@ docker compose exec web python manage.py import_psp_deputies   # слой P: д�
 | Файл | Слой | Статус |
 |---|---|---|
 | `mainstream.json` | M | ČT24, iROZHLAS, Seznam Zprávy, iDNES, Novinky, Blesk, ČTK (ленты проверены 2026-11-02, ČTK — 2026-11-03) |
-| `institutions.json` | I | BIS (výpis aktualit), NÚKIB (RSS), MV (výpis zpravodajství) — проверено 2026-11-03; реестр органов — `import_institutions`; Úřad vlády и остальные министерства — к проверке |
+| `institutions.json` | I | BIS (výpis), NÚKIB (RSS), MV (výpis) — проверено 2026-11-03. Úřad vlády, MF, MMR, MPSV, MZ, MŽP (RSS); MŠMT, MSp, MZV, MK, MO (výpis) — проверено 2026-11-21. Не собираются: MPO (robots.txt разрешает только поисковикам), MD и MZe (антибот). Реестр органов — `import_institutions` |
 | — | P | источник стенограмм создаёт `import_psp_deputies` |
 
 ## Формат
@@ -48,6 +48,12 @@ docker compose exec web python manage.py import_psp_deputies   # слой P: д�
   - `listing_link_xpath` — XPath к href ссылок на статьи на странице-списке;
   - `date_regex` — дата из текста страницы (группы `day`, `month`, `year`), если htmldate ошибается;
   - `max_date_lag_days` — допустимое отставание даты от сбора (30; у органов 730);
-  - `origin_xpath` — XPath к адресу первоисточника на странице → `meta.origin_urls`.
+  - `origin_xpath` — XPath к адресу первоисточника на странице → `meta.origin_urls`;
+  - `listing_strip_query` — отбросить параметры у ссылок со страницы-списка (Liferay, MSp);
+  - `prefer_feed_date` — дата из ленты, а не со страницы (`date_source = feed`), если
+    htmldate на сайте ошибается (Úřad vlády, MPSV, MŽP);
+  - `title_xpath` — XPath к заголовку, если trafilatura берёт название рубрики (MK).
+- `Crawl-delay` из robots.txt сборщик не читает: для таких сайтов задайте
+  `request_delay_seconds` вручную (MŽP — 10, MZV — 20).
 - `expected_language: ""` — язык не проверяется (сайт на нескольких языках).
 - `actor` — сайт целиком как один актор (издание или орган).
