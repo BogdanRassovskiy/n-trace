@@ -13,7 +13,8 @@
 
 ## Další konvence
 
-- Jedna etapa = jedna větev `stage-N-…`, commit obsahuje „Etapa N“ / „Этап N“.
+- NTrace je samostatný projekt, nezávislý na TrollTrace. Vývoj probíhá přímo ve větvi `main`,
+  bez vedlejších větví a pull requestů.
 - Průběh etap se zaznamenává na Trello nástěnce „NTrace — разработка (диплом)“.
 - Před commitem: `ruff format . && ruff check .` a `pytest` (v kontejneru `web`).
 
